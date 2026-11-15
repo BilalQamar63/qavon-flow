@@ -1,0 +1,1025 @@
+# PROJECT: CLIENT ONBOARDING & ASSET HUB
+
+## 1. PROJECT VISION — UNDERSTAND WHY WE ARE BUILDING THIS
+
+Build a complete, professional SaaS application called **Client Onboarding & Asset Hub**.
+
+This software is designed for digital agencies, web development companies, freelancers, designers, consultants, and other service-based businesses that regularly onboard new clients.
+
+### The Problem
+
+When an agency starts working with a new client, it needs to collect several things before beginning the actual work:
+
+- Company logos and brand assets.
+- Brand guidelines and design references.
+- Company information and business details.
+- Website content, images, and documents.
+- Social media links.
+- Domain and hosting information.
+- Required project credentials and access information.
+- Project-specific requirements.
+- Other important files and resources.
+
+Currently, many agencies collect these materials through email conversations, WhatsApp messages, Google Drive links, spreadsheets, and scattered documents.
+
+This creates several problems:
+
+1. Agencies repeatedly chase clients for missing information.
+2. Important files get lost in email conversations.
+3. Clients forget what they need to submit.
+4. Agencies waste time organizing documents manually.
+5. There is no centralized overview of onboarding progress.
+6. Sensitive information may be shared through insecure communication channels.
+7. Project managers struggle to understand which clients have completed onboarding.
+
+### Our Solution
+
+Create one centralized platform where agencies can create client onboarding workspaces and invite clients through secure magic links.
+
+Each client receives a personalized onboarding portal containing organized sections, forms, file uploads, and information requests.
+
+Clients can complete their onboarding independently without repeatedly communicating with the agency about missing materials.
+
+Agency administrators can monitor progress, review submissions, manage files, and identify outstanding requirements from a centralized dashboard.
+
+**The primary purpose is to eliminate repetitive client follow-ups, organize onboarding information, and help agencies start projects faster.**
+
+This must be a functional SaaS product, not just a dashboard UI demonstration.
+
+---
+
+## 2. TARGET USERS
+
+Design the platform around these user categories:
+
+### Agency Owner / Administrator
+- Creates and manages client workspaces.
+- Invites clients.
+- Creates onboarding templates.
+- Defines required information and assets.
+- Monitors onboarding progress.
+- Reviews submitted information.
+- Manages users and permissions.
+- Accesses authorized sensitive information.
+- Manages account settings.
+
+### Agency Team Member
+- Views assigned clients.
+- Reviews client submissions.
+- Downloads authorized assets.
+- Tracks missing information.
+- Updates onboarding statuses.
+- Collaborates internally.
+
+### Client
+- Opens a secure invitation link.
+- Accesses their assigned onboarding portal.
+- Completes onboarding forms.
+- Uploads requested documents.
+- Provides company and brand information.
+- Reviews outstanding requirements.
+- Tracks their onboarding completion status.
+
+Implement proper role-based access control.
+
+---
+
+## 3. TECHNOLOGY STACK
+
+Use the following technologies:
+
+### Frontend
+- Next.js with App Router.
+- React.
+- TypeScript.
+- Material UI (MUI).
+- React-Redux.
+- Redux Toolkit.
+- Redux Toolkit Query where appropriate.
+
+### Backend
+- Next.js server-side functionality and API routes.
+- MongoDB.
+- Mongoose.
+- Secure authentication using magic links.
+- Server-side validation.
+- Role-based authorization.
+
+### Security
+- Encrypted sensitive database fields.
+- Secure session management.
+- Passwordless authentication.
+- Signed and expiring invitation tokens.
+- Secure file access.
+- Input validation and sanitization.
+- Rate limiting for authentication endpoints.
+- Protection against unauthorized access.
+
+### Development Standards
+- Strict TypeScript.
+- Modular architecture.
+- Reusable components.
+- Centralized theme configuration.
+- Consistent design tokens.
+- Clean and maintainable code.
+- Separation of concerns.
+
+Do not introduce unnecessary technologies or dependencies.
+
+---
+
+## 4. APPLICATION MODULES
+
+Build the following modules as complete, interconnected features.
+
+### MODULE A: Authentication
+
+Implement secure passwordless authentication.
+
+Features:
+- Agency administrator login.
+- Magic-link email authentication.
+- Secure invitation-based client access.
+- Expiring authentication tokens.
+- Single-use magic links.
+- Secure session handling.
+- Logout functionality.
+- Unauthorized access handling.
+- Authentication loading and error states.
+
+Magic links must use cryptographically secure random tokens.
+
+Store only hashed verification tokens in the database where appropriate.
+
+Never expose authentication secrets to the frontend.
+
+### MODULE B: Agency Dashboard
+
+Create a professional dashboard for agency administrators.
+
+Display:
+
+- Total clients.
+- Active onboarding projects.
+- Completed onboardings.
+- Pending onboardings.
+- Overdue onboarding requests.
+- Recently added clients.
+- Recent activity.
+- Onboarding completion statistics.
+
+Include a clear overview of the agency's current onboarding workload.
+
+Provide useful charts and visual indicators using real database data.
+
+Do not use hardcoded dashboard statistics in the completed application.
+
+### MODULE C: Client Management
+
+Build a complete client management system.
+
+Features:
+- Create a new client.
+- Edit client information.
+- Delete or archive clients with appropriate safeguards.
+- Search clients.
+- Filter by onboarding status.
+- View client details.
+- Assign team members.
+- View onboarding history.
+- View associated documents.
+- Track client activity.
+
+Client information should include:
+
+- Company name.
+- Contact person's name.
+- Email address.
+- Phone number.
+- Website.
+- Business industry.
+- Company description.
+- Internal notes.
+- Onboarding status.
+
+### MODULE D: Client Onboarding Workspace
+
+This is the core feature of the application.
+
+Every client must have an individual onboarding workspace.
+
+Create structured onboarding sections.
+
+#### 1. Company Information
+- Company name.
+- Business description.
+- Industry.
+- Contact information.
+- Website.
+- Business address.
+- Social media links.
+
+#### 2. Brand Assets
+- Primary logo.
+- Secondary logo.
+- Brand icon.
+- Brand guidelines.
+- Brand colors.
+- Typography information.
+- Design references.
+- Other brand resources.
+
+#### 3. Website Content
+- Homepage content.
+- About section.
+- Services information.
+- Contact information.
+- Images.
+- Videos.
+- Existing website references.
+
+#### 4. Project Requirements
+- Project goals.
+- Required features.
+- Design preferences.
+- Functional requirements.
+- Reference websites.
+- Important deadlines.
+- Additional instructions.
+
+#### 5. Access & Credentials
+
+Provide a secure area for clients to submit necessary project access information.
+
+Examples:
+- Hosting access.
+- Domain management access.
+- CMS access.
+- Third-party service credentials.
+
+Security requirements:
+- Encrypt sensitive values before storing them.
+- Never store sensitive credentials in plaintext.
+- Never expose encrypted values through ordinary API responses.
+- Restrict sensitive information to explicitly authorized agency members.
+- Never log secrets.
+- Avoid returning decrypted information unless explicitly authorized and required.
+- Provide secure access and audit logging.
+
+Prefer delegated access, OAuth, or temporary access mechanisms wherever possible instead of collecting permanent passwords.
+
+#### 6. Additional Documents
+- PDF files.
+- Images.
+- Word documents.
+- Other approved file formats.
+
+Every onboarding section should support:
+- Completion status.
+- Required and optional fields.
+- Submission timestamps.
+- Validation.
+- Save functionality.
+- Clear user feedback.
+
+### MODULE E: Secure Client Invitation
+
+Create a complete invitation workflow.
+
+Agency administrators should be able to:
+
+1. Create a client.
+2. Generate a unique onboarding invitation.
+3. Send the invitation through email.
+4. Allow clients to access their portal through a magic link.
+5. Set invitation expiration.
+6. Resend invitations.
+7. Revoke invitations.
+8. Track invitation status.
+
+Invitation states:
+
+- Pending.
+- Sent.
+- Accepted.
+- Expired.
+- Revoked.
+
+Clients should only access their own assigned workspace.
+
+### MODULE F: File & Asset Management
+
+Implement a centralized asset management system.
+
+Features:
+- Upload files.
+- Download files.
+- Preview supported files.
+- Organize assets by client.
+- Categorize assets.
+- Search files.
+- Delete files with appropriate permissions.
+- Track upload timestamps.
+- Display file sizes and types.
+- Show upload progress.
+
+Security:
+- Validate file types and sizes on the server.
+- Use secure storage.
+- Do not expose private storage paths.
+- Use authorized, short-lived download URLs.
+- Prevent unauthorized file access.
+- Consider malware scanning in a production deployment.
+
+Use a storage abstraction so that local development storage can be replaced by private cloud object storage without rewriting application logic.
+
+### MODULE G: Onboarding Progress Tracking
+
+Create a progress-tracking system.
+
+Every onboarding workspace should display:
+
+- Overall completion percentage.
+- Completed sections.
+- Incomplete sections.
+- Required missing information.
+- Pending file uploads.
+- Last activity.
+- Submission status.
+
+Calculate progress dynamically from actual required onboarding items.
+
+Do not calculate progress using arbitrary hardcoded percentages.
+
+Provide clear progress indicators for both agency administrators and clients.
+
+### MODULE H: Notifications & Activity
+
+Implement an activity system.
+
+Examples:
+- Client invitation sent.
+- Invitation accepted.
+- Client submitted company information.
+- Client uploaded a logo.
+- Client completed a section.
+- Agency reviewed submitted information.
+- Onboarding completed.
+
+Create a notification interface.
+
+Use email notification abstractions so that a real email provider can be configured.
+
+Do not pretend emails have been delivered when email credentials or provider configuration are missing.
+
+### MODULE I: Settings
+
+Implement:
+
+- Agency profile.
+- Agency branding.
+- Team management.
+- User roles.
+- Notification preferences.
+- Security settings.
+- Onboarding template settings.
+
+---
+
+## 5. UI/UX DESIGN DIRECTION
+
+The application should look like a premium B2B SaaS product.
+
+Design inspiration:
+- Linear.
+- Stripe Dashboard.
+- Notion.
+- Modern project management software.
+
+Do not copy these products. Use them as references for design quality, usability, and visual consistency.
+
+### Visual Direction
+
+Use a clean, professional, modern, and industrial design language.
+
+Requirements:
+
+- Professional dashboard layout.
+- Consistent spacing.
+- Clear information hierarchy.
+- Well-designed data tables.
+- Refined cards.
+- Minimal visual clutter.
+- Consistent borders and radii.
+- Subtle shadows.
+- Professional icons.
+- Responsive layouts.
+- Accessible contrast.
+- Proper loading and empty states.
+- Clear error and success messages.
+
+Avoid:
+- Excessive gradients.
+- Unnecessary animations.
+- Random colors.
+- Oversized headings.
+- Inconsistent padding.
+- Excessive rounded cards.
+- Repeated custom styling.
+- Generic AI-generated dashboard aesthetics.
+
+### Theme Architecture
+
+Create a centralized theme system.
+
+Suggested structure:
+
+src/theme/
+  index.ts
+  palette.ts
+  typography.ts
+  spacing.ts
+  components.ts
+  shadows.ts
+
+Define all reusable design tokens centrally.
+
+Use Material UI's theme provider.
+
+All components must follow the same theme.
+
+Never scatter random hex colors, font sizes, spacing values, or border-radius values throughout the application when a centralized token is appropriate.
+
+### Typography System
+
+Create a consistent typography scale.
+
+Define:
+- Font family.
+- H1.
+- H2.
+- H3.
+- H4.
+- H5.
+- H6.
+- Body 1.
+- Body 2.
+- Subtitle.
+- Caption.
+- Overline.
+- Button text.
+
+Define consistent font weights:
+
+- Regular: 400.
+- Medium: 500.
+- Semi-bold: 600.
+- Bold: 700.
+
+Use appropriate typography hierarchy throughout the application.
+
+### Reusable Components
+
+Create reusable components instead of repeatedly writing similar JSX.
+
+Examples:
+
+- PageHeader.
+- PageContainer.
+- Sidebar.
+- Topbar.
+- StatCard.
+- DataTable.
+- StatusChip.
+- SearchInput.
+- FilterDropdown.
+- PrimaryButton.
+- SecondaryButton.
+- ConfirmDialog.
+- FormField.
+- FileUploader.
+- FilePreview.
+- EmptyState.
+- LoadingState.
+- ErrorState.
+- ProgressIndicator.
+- SectionCard.
+- ClientAvatar.
+- NotificationMenu.
+
+Create reusable components with configurable props and clear TypeScript interfaces.
+
+Avoid unnecessary component duplication.
+
+---
+
+## 6. APPLICATION LAYOUT
+
+Create a professional application shell.
+
+### Sidebar Navigation
+
+Include:
+
+- Overview.
+- Clients.
+- Onboarding.
+- Assets.
+- Team.
+- Activity.
+- Settings.
+
+### Top Navigation
+
+Include:
+
+- Current page title or breadcrumb.
+- Search.
+- Notifications.
+- User profile menu.
+- Account settings.
+
+### Main Dashboard
+
+The main content should adapt to the selected navigation page.
+
+The client portal must have a separate, simplified layout designed for external clients.
+
+Do not show internal agency navigation to clients.
+
+---
+
+## 7. CODE ARCHITECTURE
+
+Maintain a clean, scalable project structure.
+
+Use a structure similar to:
+
+src/
+  app/
+    (auth)/
+    (dashboard)/
+    (client-portal)/
+    api/
+    layout.tsx
+    page.tsx
+
+  components/
+    common/
+    layout/
+    dashboard/
+    clients/
+    onboarding/
+    assets/
+    forms/
+    notifications/
+
+  features/
+    auth/
+    clients/
+    onboarding/
+    assets/
+    invitations/
+    notifications/
+    team/
+    settings/
+
+  store/
+    index.ts
+    hooks.ts
+    slices/
+
+  services/
+    api/
+    auth/
+    clients/
+    onboarding/
+    assets/
+
+  models/
+  schemas/
+  hooks/
+  theme/
+  types/
+  utils/
+  constants/
+  config/
+
+Adapt this structure when necessary, but preserve its architectural principles.
+
+### Architecture Rules
+
+1. Keep business logic outside presentation components.
+2. Use reusable components.
+3. Keep API communication organized.
+4. Use centralized types.
+5. Use centralized validation schemas.
+6. Avoid massive components.
+7. Avoid unnecessary prop drilling.
+8. Use Redux Toolkit for appropriate global application state.
+9. Use server-side operations for sensitive functionality.
+10. Keep authentication and authorization separate from UI logic.
+11. Use consistent naming conventions.
+12. Avoid unnecessary abstraction.
+13. Do not use TypeScript any unless absolutely unavoidable and documented.
+
+Every major feature should be modular and independently maintainable.
+
+---
+
+## 8. DATABASE DESIGN
+
+Use MongoDB with properly structured Mongoose models.
+
+Create appropriate collections for:
+
+- Users.
+- Agencies.
+- Clients.
+- Invitations.
+- OnboardingTemplates.
+- OnboardingSections.
+- OnboardingSubmissions.
+- Assets.
+- Notifications.
+- ActivityLogs.
+- Sessions, if required by the authentication architecture.
+
+Define:
+
+- ObjectId relationships.
+- Required fields.
+- Optional fields.
+- Unique indexes.
+- Appropriate compound indexes.
+- Timestamps.
+- Data validation.
+- Ownership relationships.
+
+Every agency-owned record must be scoped to the appropriate agency.
+
+Prevent cross-agency data access.
+
+Avoid storing duplicated data unnecessarily.
+
+Use appropriate database indexes for commonly searched and filtered fields.
+
+---
+
+## 9. SECURITY & PRODUCTION QUALITY
+
+Treat security as a fundamental requirement.
+
+Implement:
+
+- Server-side authentication.
+- Server-side role authorization.
+- Secure magic-link generation.
+- Hashed invitation tokens.
+- Token expiration.
+- Single-use token verification.
+- Encrypted sensitive database fields using authenticated encryption such as AES-256-GCM.
+- Environment-based encryption keys.
+- Secure session cookies.
+- CSRF protections where applicable.
+- Rate limiting.
+- Input validation.
+- File upload validation.
+- Secure error handling.
+- Audit logging.
+- Tenant isolation.
+
+Never:
+- Expose database credentials.
+- Expose encryption keys.
+- Expose email provider secrets.
+- Trust client-side role information.
+- Return sensitive fields unnecessarily.
+- Store passwords or credentials in plaintext.
+- Commit .env files.
+- Log authentication tokens or private credentials.
+
+Use appropriate production security practices and document any infrastructure-dependent security requirements.
+
+---
+
+## 10. FUNCTIONAL REQUIREMENTS
+
+The application must be genuinely functional.
+
+Do not build buttons that do nothing.
+
+Every visible action should have a meaningful implementation.
+
+Examples:
+
+- Create Client must create a database record.
+- Edit Client must update the record.
+- Delete Client must perform a protected deletion or archival operation.
+- Send Invitation must generate and dispatch an actual invitation when configured.
+- Upload File must upload and persist the file.
+- Complete Section must update the appropriate submission status.
+- Search must retrieve matching database records.
+- Filters must work.
+- Dashboard statistics must use real data.
+- Logout must terminate the session.
+- Client access must be restricted to the assigned workspace.
+
+Include:
+- Form validation.
+- API error handling.
+- Loading states.
+- Empty states.
+- Success notifications.
+- Error notifications.
+- Confirmation dialogs for destructive operations.
+
+Do not simulate backend functionality with local arrays in the final implementation.
+
+---
+
+## 11. RESPONSIVE DESIGN
+
+Support:
+
+- Desktop.
+- Laptop.
+- Tablet.
+- Mobile.
+
+Ensure:
+- Responsive sidebar behavior.
+- Mobile navigation.
+- Responsive tables.
+- Proper form layouts.
+- Mobile-friendly file uploads.
+- Readable typography.
+- Appropriate spacing.
+
+Both agency dashboard and client portal must be responsive.
+
+---
+
+## 12. TESTING & QUALITY ASSURANCE
+
+Implement appropriate tests for important functionality.
+
+Prioritize:
+
+- Authentication.
+- Magic-link verification.
+- Role-based permissions.
+- Tenant isolation.
+- Client creation.
+- Onboarding submissions.
+- File access authorization.
+- Sensitive-field encryption.
+- Progress calculation.
+
+Ensure the project passes:
+
+- TypeScript checks.
+- ESLint.
+- Production build.
+
+Resolve errors instead of suppressing them.
+
+---
+
+## 13. ENVIRONMENT CONFIGURATION
+
+Create a complete .env.example file.
+
+Include documented placeholders for:
+
+- MongoDB connection string.
+- Application base URL.
+- Authentication secret.
+- Encryption key.
+- Email provider configuration.
+- File storage configuration.
+
+Never place actual secrets inside source code.
+
+Clearly document which environment variables are mandatory and which are optional.
+
+---
+
+## 14. README — EXTREMELY IMPORTANT
+
+The README is part of the product deliverable.
+
+Write it as professional software documentation for someone who discovers this repository on GitHub.
+
+**The README must begin by explaining why this software was created, not with installation instructions.**
+
+A developer or business owner should understand the purpose of this project without needing to run it.
+
+Use the following README structure:
+
+### 1. Project Overview
+
+Explain what Client Onboarding & Asset Hub is.
+
+Describe the software as a centralized client onboarding and asset management platform for agencies and service-based businesses.
+
+### 2. Why We Built This Software
+
+Explain the actual business problem.
+
+Describe how agencies traditionally collect information through emails, messages, scattered documents, and cloud storage links.
+
+Explain why this approach creates unnecessary administrative work.
+
+Describe how the application centralizes the process and reduces repetitive communication.
+
+### 3. The Problem We Solve
+
+Explain the major pain points:
+
+- Repeated client follow-ups.
+- Missing brand assets.
+- Disorganized project information.
+- Insecure credential sharing.
+- Unstructured onboarding processes.
+- Lack of progress visibility.
+
+### 4. Our Solution
+
+Explain the centralized workspace, secure client invitations, structured onboarding sections, file management, and progress tracking.
+
+### 5. Who Is This Software For?
+
+Describe its target users:
+
+- Digital agencies.
+- Web development companies.
+- Freelance developers.
+- Designers.
+- Consultants.
+- Marketing agencies.
+- Creative studios.
+
+### 6. Core Features
+
+Document all implemented features with clear explanations.
+
+### 7. User Roles & Workflows
+
+Explain the agency administrator, team member, and client experiences.
+
+Include the typical onboarding workflow from client creation to completed onboarding.
+
+### 8. Technology Stack
+
+Document the technologies and their responsibilities.
+
+### 9. Architecture & Project Structure
+
+Explain the application architecture and important directories.
+
+### 10. Security Architecture
+
+Explain authentication, magic links, encryption, authorization, tenant isolation, and file access controls.
+
+Do not claim security features are implemented unless they actually exist.
+
+### 11. Database Design
+
+Explain the major collections and their relationships.
+
+### 12. Screenshots
+
+Provide a dedicated section for application screenshots.
+
+Use real project screenshots when available. Do not fabricate screenshots or claim that missing screenshots exist.
+
+### 13. Installation & Local Development
+
+Only after explaining the product, its purpose, architecture, and features, document:
+
+- Prerequisites.
+- Repository cloning.
+- Dependency installation.
+- Environment configuration.
+- Database setup.
+- Development server.
+- Production build.
+
+### 14. Environment Variables
+
+Explain each variable in .env.example.
+
+### 15. Testing
+
+Explain how to run tests, linting, type checking, and production builds.
+
+### 16. Future Improvements
+
+List realistic potential enhancements without presenting planned features as completed functionality.
+
+### 17. License
+
+Include an appropriate license section. Do not invent an existing license.
+
+Write the README in professional Markdown.
+
+Make it clear, informative, and useful for developers, agencies, and GitHub visitors.
+
+---
+
+## 15. IMPLEMENTATION STRATEGY
+
+Build the application systematically.
+
+Follow this order:
+
+**Phase 1 — Foundation**
+- Initialize Next.js and TypeScript.
+- Configure Material UI.
+- Configure the theme system.
+- Configure Redux Toolkit.
+- Establish the folder architecture.
+- Connect MongoDB.
+
+**Phase 2 — Authentication**
+- Implement passwordless authentication.
+- Create user and agency models.
+- Implement sessions.
+- Implement authorization.
+
+**Phase 3 — Core Agency Features**
+- Build the dashboard.
+- Implement client management.
+- Implement team management.
+- Implement invitation management.
+
+**Phase 4 — Client Portal**
+- Build the client-facing portal.
+- Implement onboarding sections.
+- Implement dynamic forms.
+- Implement progress tracking.
+
+**Phase 5 — Asset Management**
+- Implement secure uploads.
+- Implement file organization.
+- Implement previews and downloads.
+- Implement encrypted sensitive fields.
+
+**Phase 6 — Notifications & Activity**
+- Implement activity logging.
+- Implement notifications.
+- Integrate email delivery.
+
+**Phase 7 — Quality & Documentation**
+- Test all major workflows.
+- Fix TypeScript and linting errors.
+- Verify permissions.
+- Verify tenant isolation.
+- Complete the README.
+- Complete .env.example.
+- Verify production build.
+
+---
+
+## 16. FINAL DEVELOPMENT INSTRUCTIONS
+
+Follow these rules throughout development:
+
+1. Build a complete application, not just a visual prototype.
+2. Prioritize working business functionality over decorative UI.
+3. Maintain clean, structured, industrial-level code quality.
+4. Reuse components wherever appropriate.
+5. Centralize themes, colors, typography, font weights, spacing, and styling.
+6. Keep components small and maintainable.
+7. Use proper TypeScript interfaces and types.
+8. Implement actual MongoDB persistence.
+9. Implement real authentication and authorization.
+10. Secure all sensitive information.
+11. Ensure the agency dashboard and client portal work together.
+12. Make the application responsive.
+13. Keep the README focused on the business problem, product vision, architecture, and implemented functionality before setup instructions.
+14. Do not leave unfinished placeholder functionality while claiming the application is complete.
+15. Do not fabricate integrations, features, screenshots, or test results.
+
+### Final Acceptance Criteria
+
+The project is complete only when:
+
+- An agency administrator can authenticate.
+- An administrator can create a client.
+- The system can generate and send a secure client invitation when email is configured.
+- A client can access their assigned onboarding portal.
+- A client can submit onboarding information.
+- A client can upload requested assets.
+- Sensitive information is encrypted and protected.
+- The agency can review submissions.
+- Onboarding progress updates dynamically.
+- Dashboard information comes from the database.
+- Authorization prevents unauthorized access.
+- The interface is responsive.
+- The codebase is properly structured.
+- The application builds successfully.
+- The README clearly explains why this software exists and what business problem it solves.
+
+**Build this as a professional, maintainable SaaS product that demonstrates real-world full-stack engineering ability.**

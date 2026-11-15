@@ -1,0 +1,6 @@
+{
+  "name": "QavonFlow",
+  "description": "QavonFlow helps agencies and businesses streamline client onboarding, collect project requirements, manage files and brand assets, and organize client workflows in one centralized workspace.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

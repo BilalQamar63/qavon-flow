@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --color-canvas: #F8F5EE;
+    --color-surface: #FFFFFF;
+    --color-surface-muted: #F2EDE3;
+    --color-ink: #191A1D;
+    --color-ink-muted: #5C5F66;
+    --color-accent: #EDA320;
+    --color-accent-hover: #D48E12;
+    --color-border: #E5E0D5;
+  }
+
+  html,
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: "DM Sans", system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}

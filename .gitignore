@@ -1,0 +1,26 @@
+# Dependencies & build outputs
+node_modules/
+build/
+dist/
+coverage/
+.vite/
+*.tsbuildinfo
+
+# Local SQLite database, uploads & persisted dev keyfile
+data/
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+.local-keys.json
+
+# Environment files
+.env*
+!.env.example
+
+# OS & editor artifacts
+.DS_Store
+*.log
+.vscode/
+.idea/
