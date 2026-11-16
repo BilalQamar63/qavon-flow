@@ -408,6 +408,7 @@ describe('Brevo SMTP Email Transport', () => {
       to: 'newclient@acme.co',
       subject: 'Your QavonFlow sign-in link',
       text: 'Open https://example.vercel.app/?magicToken=abc',
+      html: '<p>Open the secure sign-in link</p>',
     });
 
     expect(result).toEqual({ configured: true, delivered: true });
@@ -427,6 +428,7 @@ describe('Brevo SMTP Email Transport', () => {
         from: 'QavonFlow <it.bilalqamardeen@gmail.com>',
         to: 'newclient@acme.co',
         subject: 'Your QavonFlow sign-in link',
+        html: '<p>Open the secure sign-in link</p>',
       }),
     );
   });

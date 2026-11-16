@@ -13,6 +13,7 @@ import { generateSecureToken, hashToken } from '../security/crypto.ts';
 import { createRateLimiter } from '../security/rateLimit.ts';
 import { recordActivityAndNotification, recordSecurityLog } from '../services/audit.ts';
 import { emailProvider } from '../services/email.ts';
+import { buildMagicLinkEmail } from '../services/emailTemplates.ts';
 import { asyncHandler } from '../utils/asyncHandler.ts';
 import { registerAgencySchema, requestMagicLinkSchema } from '../../src/schemas/validation.ts';
 import type { OnboardingSectionKey } from '../../src/types/index.ts';
@@ -125,7 +126,7 @@ authRouter.post(
     const emailResult = await emailProvider.send({
       to: user.email,
       subject: 'Your sign-in link for QavonFlow',
-      text: `Sign in to QavonFlow (by Qavon Digital) using this single-use link (expires in 15 minutes): ${magicUrl}`,
+      ...buildMagicLinkEmail(magicUrl),
     });
 
     const responseMessage = emailResult.delivered

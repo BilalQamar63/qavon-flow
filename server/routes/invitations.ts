@@ -12,6 +12,7 @@ import { generateSecureToken, hashToken } from '../security/crypto.ts';
 import { createRateLimiter } from '../security/rateLimit.ts';
 import { recordActivityAndNotification, recordSecurityLog } from '../services/audit.ts';
 import { emailProvider, type EmailDispatchResult } from '../services/email.ts';
+import { buildPortalInvitationEmail } from '../services/emailTemplates.ts';
 import { asyncHandler } from '../utils/asyncHandler.ts';
 import { invitationCreateSchema } from '../../src/schemas/validation.ts';
 import type { InvitationStatus } from '../../src/types/index.ts';
@@ -159,7 +160,11 @@ invitationsRouter.post(
       emailResult = await emailProvider.send({
         to: client.email,
         subject: `${client.company_name} — Your QavonFlow onboarding workspace`,
-        text: `Hello ${client.contact_name}, access your private QavonFlow onboarding portal here: ${portalUrl}`,
+        ...buildPortalInvitationEmail({
+          contactName: client.contact_name,
+          companyName: client.company_name,
+          portalUrl,
+        }),
       });
     }
 
@@ -268,7 +273,12 @@ invitationsRouter.post(
     const emailResult = await emailProvider.send({
       to: existing.email,
       subject: `Reminder: Your QavonFlow onboarding workspace for ${existing.company_name}`,
-      text: `Hello ${existing.contact_name}, access your QavonFlow onboarding portal: ${portalUrl}`,
+      ...buildPortalInvitationEmail({
+        contactName: existing.contact_name,
+        companyName: existing.company_name,
+        portalUrl,
+        reminder: true,
+      }),
     });
 
     await recordActivityAndNotification(db, {
