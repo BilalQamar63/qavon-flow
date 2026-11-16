@@ -1,4 +1,5 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import type { OnboardingSectionKey } from '../../types';
 
 export type AgencyNavPage =
   | 'overview'
@@ -27,6 +28,7 @@ export interface ToastMessage {
 interface UiState {
   activePage: AgencyNavPage;
   selectedClientId: string | null;
+  activeOnboardingSectionKey: OnboardingSectionKey;
   clientStatusFilter: ClientStatusFilter;
   globalSearch: string;
   mobileNavOpen: boolean;
@@ -36,6 +38,7 @@ interface UiState {
 const initialState: UiState = {
   activePage: 'overview',
   selectedClientId: null,
+  activeOnboardingSectionKey: 'company_info',
   clientStatusFilter: 'all',
   globalSearch: '',
   mobileNavOpen: false,
@@ -66,6 +69,9 @@ const uiSlice = createSlice({
     setSelectedClientId(state, action: PayloadAction<string | null>) {
       state.selectedClientId = action.payload;
     },
+    setActiveOnboardingSectionKey(state, action: PayloadAction<OnboardingSectionKey>) {
+      state.activeOnboardingSectionKey = action.payload;
+    },
     setGlobalSearch(state, action: PayloadAction<string>) {
       state.globalSearch = action.payload;
     },
@@ -88,6 +94,7 @@ const uiSlice = createSlice({
     resetUiSession(state) {
       state.activePage = 'overview';
       state.selectedClientId = null;
+      state.activeOnboardingSectionKey = 'company_info';
       state.clientStatusFilter = 'all';
       state.globalSearch = '';
       state.mobileNavOpen = false;
@@ -101,6 +108,7 @@ export const {
   setClientStatusFilter,
   openClientWorkspace,
   setSelectedClientId,
+  setActiveOnboardingSectionKey,
   setGlobalSearch,
   setMobileNavOpen,
   showToast,

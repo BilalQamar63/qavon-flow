@@ -6,7 +6,7 @@ import {
   ListItemIcon,
   ListItemText,
   Typography,
-} from '@mui/material';
+} from "@mui/material";
 import {
   Activity,
   Briefcase,
@@ -15,30 +15,30 @@ import {
   LayoutDashboard,
   Settings,
   Users,
-} from 'lucide-react';
-import type { ReactNode } from 'react';
-import { QAVONFLOW_BRANDING } from '../../constants/branding';
-import { useAppDispatch, useAppSelector } from '../../store/hooks';
+} from "lucide-react";
+import type { ReactNode } from "react";
+import { QAVONFLOW_BRANDING } from "../../constants/branding";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import {
   setActivePage,
   setMobileNavOpen,
   type AgencyNavPage,
-} from '../../store/slices/uiSlice';
-import { FONT_DISPLAY, themePalette, themeSpacing } from '../../theme';
-import { BrandLogo } from '../common/BrandLogo';
+} from "../../store/slices/uiSlice";
+import { FONT_DISPLAY, themePalette, themeSpacing } from "../../theme";
+import { BrandLogo } from "../common/BrandLogo";
 
 interface SidebarProps {
   agencyName: string;
 }
 
 const NAV_ITEMS: { id: AgencyNavPage; label: string; icon: ReactNode }[] = [
-  { id: 'overview', label: 'Overview', icon: <LayoutDashboard size={18} /> },
-  { id: 'clients', label: 'Clients', icon: <Briefcase size={18} /> },
-  { id: 'onboarding', label: 'Onboarding', icon: <Layers size={18} /> },
-  { id: 'assets', label: 'Assets', icon: <FolderOpen size={18} /> },
-  { id: 'team', label: 'Team', icon: <Users size={18} /> },
-  { id: 'activity', label: 'Activity', icon: <Activity size={18} /> },
-  { id: 'settings', label: 'Settings', icon: <Settings size={18} /> },
+  { id: "overview", label: "Overview", icon: <LayoutDashboard size={18} /> },
+  { id: "clients", label: "Clients", icon: <Briefcase size={18} /> },
+  { id: "onboarding", label: "Onboarding", icon: <Layers size={18} /> },
+  { id: "assets", label: "Assets", icon: <FolderOpen size={18} /> },
+  { id: "team", label: "Team", icon: <Users size={18} /> },
+  { id: "activity", label: "Activity", icon: <Activity size={18} /> },
+  { id: "settings", label: "Settings", icon: <Settings size={18} /> },
 ];
 
 export function Sidebar({ agencyName }: SidebarProps) {
@@ -50,20 +50,20 @@ export function Sidebar({ agencyName }: SidebarProps) {
     <Box
       sx={{
         width: themeSpacing.sidebarWidth,
-        height: '100%',
+        height: "100%",
         bgcolor: themePalette.background.darkSurface,
         color: themePalette.text.onDark,
-        display: 'flex',
-        flexDirection: 'column',
+        display: "flex",
+        flexDirection: "column",
       }}
     >
       <Box
         sx={{
           height: themeSpacing.topbarHeight,
           px: 2.5,
-          display: 'flex',
-          alignItems: 'center',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          display: "flex",
+          alignItems: "center",
+          borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
         }}
       >
         <BrandLogo surface="dark" size="sm" showByline />
@@ -78,29 +78,35 @@ export function Sidebar({ agencyName }: SidebarProps) {
               selected={selected}
               onClick={() => dispatch(setActivePage(item.id))}
               sx={{
-                borderRadius: '8px',
+                borderRadius: "8px",
                 mb: 0.5,
                 py: 1,
                 px: 1.5,
-                color: selected ? themePalette.primary.main : themePalette.text.onDarkMuted,
-                bgcolor: selected ? themePalette.accent.main : 'transparent',
-                '&.Mui-selected': {
+                color: selected
+                  ? themePalette.primary.main
+                  : themePalette.text.onDarkMuted,
+                bgcolor: selected ? themePalette.accent.main : "transparent",
+                "&.Mui-selected": {
                   bgcolor: themePalette.accent.main,
                   color: themePalette.primary.main,
                 },
-                '&.Mui-selected:hover': {
+                "&.Mui-selected:hover": {
                   bgcolor: themePalette.accent.hover,
                 },
-                '&:hover': {
-                  bgcolor: selected ? themePalette.accent.hover : 'rgba(255, 255, 255, 0.06)',
-                  color: selected ? themePalette.primary.main : themePalette.text.onDark,
+                "&:hover": {
+                  bgcolor: selected
+                    ? themePalette.accent.hover
+                    : "rgba(255, 255, 255, 0.06)",
+                  color: selected
+                    ? themePalette.primary.main
+                    : themePalette.text.onDark,
                 },
               }}
             >
               <ListItemIcon
                 sx={{
                   minWidth: 34,
-                  color: 'inherit',
+                  color: "inherit",
                 }}
               >
                 {item.icon}
@@ -111,9 +117,10 @@ export function Sidebar({ agencyName }: SidebarProps) {
                   primary: {
                     sx: {
                       fontFamily: FONT_DISPLAY,
-                      fontSize: '0.875rem',
+                      fontSize: "0.875rem",
                       fontWeight: selected ? 700 : 500,
-                      whiteSpace: 'nowrap',
+                      whiteSpace: "nowrap",
+                      color: "white",
                     },
                   },
                 }}
@@ -127,25 +134,25 @@ export function Sidebar({ agencyName }: SidebarProps) {
         sx={{
           px: 2.5,
           py: 2,
-          borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+          borderTop: "1px solid rgba(255, 255, 255, 0.08)",
         }}
       >
         <Typography
           sx={{
             fontFamily: FONT_DISPLAY,
-            fontSize: '0.8125rem',
+            fontSize: "0.8125rem",
             fontWeight: 600,
             color: themePalette.text.onDark,
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
           }}
         >
           {agencyName}
         </Typography>
         <Typography
           sx={{
-            fontSize: '0.7rem',
+            fontSize: "0.7rem",
             color: themePalette.text.onDarkMuted,
             lineHeight: 1.4,
             mt: 0.25,
@@ -164,10 +171,12 @@ export function Sidebar({ agencyName }: SidebarProps) {
         sx={{
           width: { md: themeSpacing.sidebarWidth },
           flexShrink: { md: 0 },
-          display: { xs: 'none', md: 'block' },
+          display: { xs: "none", md: "block" },
         }}
       >
-        <Box sx={{ position: 'fixed', top: 0, left: 0, bottom: 0 }}>{content}</Box>
+        <Box sx={{ position: "fixed", top: 0, left: 0, bottom: 0 }}>
+          {content}
+        </Box>
       </Box>
 
       <Drawer
@@ -175,7 +184,7 @@ export function Sidebar({ agencyName }: SidebarProps) {
         open={mobileOpen}
         onClose={() => dispatch(setMobileNavOpen(false))}
         ModalProps={{ keepMounted: true }}
-        sx={{ display: { xs: 'block', md: 'none' } }}
+        sx={{ display: { xs: "block", md: "none" } }}
       >
         {content}
       </Drawer>

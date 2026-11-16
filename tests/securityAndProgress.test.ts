@@ -371,6 +371,26 @@ describe('Brevo SMTP Email Transport', () => {
     expect(res.reason).toContain('SMTP provider is not configured');
   });
 
+  it('does not use a placeholder sender when EMAIL_FROM is missing', async () => {
+    process.env.SMTP_HOST = 'smtp-relay.brevo.com';
+    process.env.SMTP_PORT = '587';
+    process.env.SMTP_USER = 'smtp-login@example.com';
+    process.env.SMTP_PASS = 'mock-smtp-key';
+    delete process.env.EMAIL_FROM;
+
+    expect(emailProvider.isConfigured()).toBe(false);
+    await expect(
+      emailProvider.send({
+        to: 'client@example.com',
+        subject: 'Test',
+        text: 'Hello',
+      }),
+    ).resolves.toMatchObject({
+      configured: false,
+      delivered: false,
+    });
+  });
+
   it('dispatches outbound mail via Nodemailer when Brevo SMTP variables are set', async () => {
     process.env.SMTP_HOST = 'smtp-relay.brevo.com';
     process.env.SMTP_PORT = '587';

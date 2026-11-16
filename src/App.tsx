@@ -1,5 +1,5 @@
 import { Alert, Box, Button, CircularProgress, Snackbar, Typography } from '@mui/material';
-import { Suspense, lazy, useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { BrandLogo } from './components/common/BrandLogo';
 import { AgencyShell } from './components/layout/AgencyShell';
 import { ClientPortalShell } from './components/layout/ClientPortalShell';
@@ -10,9 +10,15 @@ import {
   useVerifyMagicTokenMutation,
 } from './store/api/hubApi';
 import { useAppDispatch, useAppSelector } from './store/hooks';
-import { clearToast } from './store/slices/uiSlice';
+import {
+  clearToast,
+  setActiveOnboardingSectionKey,
+  setActivePage,
+  setSelectedClientId,
+} from './store/slices/uiSlice';
 import { themePalette } from './theme';
 import { getApiErrorMessage } from './utils/apiError';
+import { buildAppPath, parseAppRoute } from './utils/appRoutes';
 
 const AuthView = lazy(() => import('./features/auth/AuthView').then((m) => ({ default: m.AuthView })));
 const OverviewPage = lazy(() =>
@@ -55,6 +61,10 @@ function RouteLoadingFallback() {
 export default function App() {
   const dispatch = useAppDispatch();
   const activePage = useAppSelector((s) => s.ui.activePage);
+  const selectedClientId = useAppSelector((s) => s.ui.selectedClientId);
+  const activeOnboardingSectionKey = useAppSelector(
+    (s) => s.ui.activeOnboardingSectionKey,
+  );
   const toast = useAppSelector((s) => s.ui.toast);
 
   const { data: sessionData, isLoading: sessionLoading } = useGetSessionQuery();
@@ -63,6 +73,28 @@ export default function App() {
 
   const [tokenProcessing, setTokenProcessing] = useState(false);
   const [tokenError, setTokenError] = useState<string | null>(null);
+  const [routeInitialized, setRouteInitialized] = useState(false);
+  const replacePathOnSyncRef = useRef(true);
+
+  useEffect(() => {
+    const syncRouteFromLocation = () => {
+      replacePathOnSyncRef.current = true;
+      const route = parseAppRoute(window.location.pathname);
+      dispatch(setActivePage(route.page));
+      if (route.clientId) {
+        dispatch(setSelectedClientId(route.clientId));
+      }
+      if (route.onboardingSectionKey) {
+        dispatch(setActiveOnboardingSectionKey(route.onboardingSectionKey));
+      }
+    };
+
+    syncRouteFromLocation();
+    window.addEventListener('popstate', syncRouteFromLocation);
+    setRouteInitialized(true);
+
+    return () => window.removeEventListener('popstate', syncRouteFromLocation);
+  }, [dispatch]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -95,6 +127,33 @@ export default function App() {
   }, [verifyMagicToken, acceptInvitationToken]);
 
   const user = sessionData?.user || null;
+  const userRole = user?.role;
+
+  useEffect(() => {
+    if (!routeInitialized || sessionLoading || !userRole) return;
+
+    const nextPath = buildAppPath({
+      page: activePage,
+      clientId: selectedClientId,
+      onboardingSectionKey: activeOnboardingSectionKey,
+      isClientPortal: userRole === 'client',
+    });
+    if (window.location.pathname !== nextPath) {
+      if (replacePathOnSyncRef.current) {
+        window.history.replaceState({}, document.title, nextPath);
+      } else {
+        window.history.pushState({}, document.title, nextPath);
+      }
+    }
+    replacePathOnSyncRef.current = false;
+  }, [
+    activeOnboardingSectionKey,
+    activePage,
+    routeInitialized,
+    selectedClientId,
+    sessionLoading,
+    userRole,
+  ]);
 
   if (sessionLoading || tokenProcessing) {
     return (

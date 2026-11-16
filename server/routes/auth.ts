@@ -130,9 +130,13 @@ authRouter.post(
 
     const responseMessage = emailResult.delivered
       ? 'If an agency account exists for that email, a single-use verification link has been sent to your inbox.'
-      : emailResult.configured
-        ? 'Single-use magic link generated, but SMTP relay delivery failed. Check your SMTP settings or use the verification link in development.'
-        : 'Single-use magic link generated. SMTP is not configured in this environment, so use the verification link below.';
+      : serverConfig.isProduction
+        ? emailResult.configured
+          ? 'SMTP relay delivery failed. Contact an administrator to check the SMTP settings.'
+          : 'SMTP is not configured for this deployment. Contact an administrator.'
+        : emailResult.configured
+          ? 'SMTP relay delivery failed. Check your SMTP settings or use the verification link below.'
+          : 'SMTP is not configured in this environment, so use the verification link below.';
 
     res.json({
       ok: true,

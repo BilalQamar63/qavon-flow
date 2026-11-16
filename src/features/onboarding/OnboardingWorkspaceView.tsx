@@ -17,7 +17,7 @@ import {
   Tabs,
   TextField,
   Typography,
-} from '@mui/material';
+} from "@mui/material";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -32,23 +32,23 @@ import {
   Save,
   Send,
   User,
-} from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
-import { ClientAvatar } from '../../components/common/ClientAvatar';
-import { EmptyState } from '../../components/common/EmptyState';
-import { ErrorState } from '../../components/common/ErrorState';
-import { FileUploader } from '../../components/common/FileUploader';
-import { LoadingState } from '../../components/common/LoadingState';
-import { PageContainer } from '../../components/common/PageContainer';
-import { PageHeader } from '../../components/common/PageHeader';
-import { ProgressIndicator } from '../../components/common/ProgressIndicator';
-import { StatusBadge } from '../../components/common/StatusBadge';
+} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ClientAvatar } from "../../components/common/ClientAvatar";
+import { EmptyState } from "../../components/common/EmptyState";
+import { ErrorState } from "../../components/common/ErrorState";
+import { FileUploader } from "../../components/common/FileUploader";
+import { LoadingState } from "../../components/common/LoadingState";
+import { PageContainer } from "../../components/common/PageContainer";
+import { PageHeader } from "../../components/common/PageHeader";
+import { ProgressIndicator } from "../../components/common/ProgressIndicator";
+import { StatusBadge } from "../../components/common/StatusBadge";
 import {
   DEFAULT_SECTION_DATA,
   ONBOARDING_SECTIONS,
   getNestedObjectValue,
   isOnboardingValueFilled,
-} from '../../constants/onboarding';
+} from "../../constants/onboarding";
 import {
   useGetClientDetailQuery,
   useGetClientsQuery,
@@ -56,10 +56,14 @@ import {
   useReviewOnboardingSectionMutation,
   useSaveOnboardingSectionMutation,
   useUpdateClientMutation,
-} from '../../store/api/hubApi';
-import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { setSelectedClientId, showToast } from '../../store/slices/uiSlice';
-import { FONT_DISPLAY, FONT_MONO, themePalette } from '../../theme';
+} from "../../store/api/hubApi";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import {
+  setActiveOnboardingSectionKey,
+  setSelectedClientId,
+  showToast,
+} from "../../store/slices/uiSlice";
+import { FONT_DISPLAY, FONT_MONO, themePalette } from "../../theme";
 import type {
   AccessCredentialsMetaData,
   AdditionalDocumentsMetaData,
@@ -72,21 +76,23 @@ import type {
   ProjectRequirementsData,
   UserRole,
   WebsiteContentData,
-} from '../../types';
-import { getApiErrorMessage, getApiMissingItems } from '../../utils/apiError';
-import { formatRelativeTime, formatShortDate } from '../../utils/format';
-import { ClientFormDialog } from '../clients/ClientFormDialog';
-import { InviteClientDialog } from '../clients/InviteClientDialog';
-import { CredentialVaultPanel } from './CredentialVaultPanel';
-import { SectionAssetsList } from './SectionAssetsList';
+} from "../../types";
+import { getApiErrorMessage, getApiMissingItems } from "../../utils/apiError";
+import { formatRelativeTime, formatShortDate } from "../../utils/format";
+import { ClientFormDialog } from "../clients/ClientFormDialog";
+import { InviteClientDialog } from "../clients/InviteClientDialog";
+import { CredentialVaultPanel } from "./CredentialVaultPanel";
+import { SectionAssetsList } from "./SectionAssetsList";
 
 const SECTION_DEF_BY_KEY = new Map(ONBOARDING_SECTIONS.map((s) => [s.key, s]));
-const SECTION_INDEX_BY_KEY = new Map(ONBOARDING_SECTIONS.map((s, idx) => [s.key, idx]));
+const SECTION_INDEX_BY_KEY = new Map(
+  ONBOARDING_SECTIONS.map((s, idx) => [s.key, idx]),
+);
 const BRAND_ASSET_CATEGORIES = new Set([
-  'primary_logo',
-  'secondary_logo',
-  'brand_icon',
-  'brand_guidelines',
+  "primary_logo",
+  "secondary_logo",
+  "brand_icon",
+  "brand_guidelines",
 ]);
 
 interface OnboardingWorkspaceViewProps {
@@ -100,22 +106,29 @@ export function OnboardingWorkspaceView({
 }: OnboardingWorkspaceViewProps) {
   const dispatch = useAppDispatch();
   const selectedClientId = useAppSelector((s) => s.ui.selectedClientId);
-  const isClientPortal = viewerRole === 'client';
+  const activeSectionKey = useAppSelector(
+    (s) => s.ui.activeOnboardingSectionKey,
+  );
+  const isClientPortal = viewerRole === "client";
+  const setActiveSectionKey = (sectionKey: OnboardingSectionKey) =>
+    dispatch(setActiveOnboardingSectionKey(sectionKey));
 
   const { data: clientsData } = useGetClientsQuery(
-    { status: 'all' },
+    { status: "all" },
     { skip: isClientPortal },
   );
 
   const activeClientId =
     fixedClientId || selectedClientId || clientsData?.clients?.[0]?.id || null;
 
-  const [workspaceTab, setWorkspaceTab] = useState<'modules' | 'profile' | 'activity'>('modules');
-  const [activeSectionKey, setActiveSectionKey] = useState<OnboardingSectionKey>('company_info');
-  const [reviewNote, setReviewNote] = useState('');
+  const [workspaceTab, setWorkspaceTab] = useState<
+    "modules" | "profile" | "activity"
+  >("modules");
+  const [reviewNote, setReviewNote] = useState("");
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
-  const [justSubmittedSection, setJustSubmittedSection] = useState<OnboardingSectionKey | null>(null);
-  const [notesDraft, setNotesDraft] = useState('');
+  const [justSubmittedSection, setJustSubmittedSection] =
+    useState<OnboardingSectionKey | null>(null);
+  const [notesDraft, setNotesDraft] = useState("");
   const [inviteOpen, setInviteOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
 
@@ -124,60 +137,84 @@ export function OnboardingWorkspaceView({
     isLoading,
     isError,
     refetch,
-  } = useGetOnboardingWorkspaceQuery(activeClientId || '', {
+  } = useGetOnboardingWorkspaceQuery(activeClientId || "", {
     skip: !activeClientId,
   });
 
-  const { data: clientDetailData } = useGetClientDetailQuery(activeClientId || '', {
-    skip: !activeClientId || isClientPortal,
-  });
+  const { data: clientDetailData } = useGetClientDetailQuery(
+    activeClientId || "",
+    {
+      skip: !activeClientId || isClientPortal,
+    },
+  );
 
-  const [saveSection, { isLoading: saving }] = useSaveOnboardingSectionMutation();
-  const [reviewSection, { isLoading: reviewing }] = useReviewOnboardingSectionMutation();
-  const [updateClient, { isLoading: updatingNotes }] = useUpdateClientMutation();
+  const [saveSection, { isLoading: saving }] =
+    useSaveOnboardingSectionMutation();
+  const [reviewSection, { isLoading: reviewing }] =
+    useReviewOnboardingSectionMutation();
+  const [updateClient, { isLoading: updatingNotes }] =
+    useUpdateClientMutation();
+
+  useEffect(() => {
+    const firstClientId = clientsData?.clients?.[0]?.id;
+    if (!isClientPortal && !selectedClientId && firstClientId) {
+      dispatch(setSelectedClientId(firstClientId));
+    }
+  }, [clientsData?.clients, dispatch, isClientPortal, selectedClientId]);
 
   // Form states per section
-  const [companyForm, setCompanyForm] = useState<CompanyInfoData>(DEFAULT_SECTION_DATA.company_info);
-  const [brandForm, setBrandForm] = useState<BrandAssetsData>(DEFAULT_SECTION_DATA.brand_assets);
-  const [colorInput, setColorInput] = useState('#EDA320');
+  const [companyForm, setCompanyForm] = useState<CompanyInfoData>(
+    DEFAULT_SECTION_DATA.company_info,
+  );
+  const [brandForm, setBrandForm] = useState<BrandAssetsData>(
+    DEFAULT_SECTION_DATA.brand_assets,
+  );
+  const [colorInput, setColorInput] = useState("#EDA320");
   const [contentForm, setContentForm] = useState<WebsiteContentData>(
     DEFAULT_SECTION_DATA.website_content,
   );
   const [reqForm, setReqForm] = useState<ProjectRequirementsData>(
     DEFAULT_SECTION_DATA.project_requirements,
   );
-  const [accessMetaForm, setAccessMetaForm] = useState<AccessCredentialsMetaData>(
-    DEFAULT_SECTION_DATA.access_credentials,
-  );
+  const [accessMetaForm, setAccessMetaForm] =
+    useState<AccessCredentialsMetaData>(
+      DEFAULT_SECTION_DATA.access_credentials,
+    );
   const [docsMetaForm, setDocsMetaForm] = useState<AdditionalDocumentsMetaData>(
     DEFAULT_SECTION_DATA.additional_documents,
   );
 
   useEffect(() => {
     if (!workspace) return;
-    setNotesDraft(workspace.client.internalNotes || '');
+    setNotesDraft(workspace.client.internalNotes || "");
     setValidationErrors([]);
     for (const sec of workspace.sections) {
-      if (sec.sectionKey === 'company_info') {
-        setCompanyForm({ ...DEFAULT_SECTION_DATA.company_info, ...(sec.data as CompanyInfoData) });
-      } else if (sec.sectionKey === 'brand_assets') {
-        setBrandForm({ ...DEFAULT_SECTION_DATA.brand_assets, ...(sec.data as BrandAssetsData) });
-      } else if (sec.sectionKey === 'website_content') {
+      if (sec.sectionKey === "company_info") {
+        setCompanyForm({
+          ...DEFAULT_SECTION_DATA.company_info,
+          ...(sec.data as CompanyInfoData),
+        });
+      } else if (sec.sectionKey === "brand_assets") {
+        setBrandForm({
+          ...DEFAULT_SECTION_DATA.brand_assets,
+          ...(sec.data as BrandAssetsData),
+        });
+      } else if (sec.sectionKey === "website_content") {
         setContentForm({
           ...DEFAULT_SECTION_DATA.website_content,
           ...(sec.data as WebsiteContentData),
         });
-      } else if (sec.sectionKey === 'project_requirements') {
+      } else if (sec.sectionKey === "project_requirements") {
         setReqForm({
           ...DEFAULT_SECTION_DATA.project_requirements,
           ...(sec.data as ProjectRequirementsData),
         });
-      } else if (sec.sectionKey === 'access_credentials') {
+      } else if (sec.sectionKey === "access_credentials") {
         setAccessMetaForm({
           ...DEFAULT_SECTION_DATA.access_credentials,
           ...(sec.data as AccessCredentialsMetaData),
         });
-      } else if (sec.sectionKey === 'additional_documents') {
+      } else if (sec.sectionKey === "additional_documents") {
         setDocsMetaForm({
           ...DEFAULT_SECTION_DATA.additional_documents,
           ...(sec.data as AdditionalDocumentsMetaData),
@@ -206,9 +243,9 @@ export function OnboardingWorkspaceView({
       counts[asset.category] = (counts[asset.category] || 0) + 1;
       if (BRAND_ASSET_CATEGORIES.has(asset.category)) {
         brand.push(asset);
-      } else if (asset.category === 'website_media') {
+      } else if (asset.category === "website_media") {
         website.push(asset);
-      } else if (asset.category === 'additional_document') {
+      } else if (asset.category === "additional_document") {
         additionalDocs.push(asset);
       }
     }
@@ -226,7 +263,7 @@ export function OnboardingWorkspaceView({
     const needsRev: OnboardingSectionState[] = [];
     for (const sec of workspace?.sections || []) {
       byKey.set(sec.sectionKey, sec);
-      if (sec.status === 'needs_revision') {
+      if (sec.status === "needs_revision") {
         needsRev.push(sec);
       }
     }
@@ -256,38 +293,45 @@ export function OnboardingWorkspaceView({
   if (isError || !workspace) {
     return (
       <PageContainer>
-        <ErrorState message="Unable to load onboarding workspace." onRetry={refetch} />
+        <ErrorState
+          message="Unable to load onboarding workspace."
+          onRetry={refetch}
+        />
       </PageContainer>
     );
   }
 
-  const activeSection = sectionByKey.get(activeSectionKey) || workspace.sections[0];
+  const activeSection =
+    sectionByKey.get(activeSectionKey) || workspace.sections[0];
   const activeSectionIdx = SECTION_INDEX_BY_KEY.get(activeSectionKey) ?? 0;
-  const prevSection = activeSectionIdx > 0 ? ONBOARDING_SECTIONS[activeSectionIdx - 1] : null;
+  const prevSection =
+    activeSectionIdx > 0 ? ONBOARDING_SECTIONS[activeSectionIdx - 1] : null;
   const nextSection =
     activeSectionIdx < ONBOARDING_SECTIONS.length - 1
       ? ONBOARDING_SECTIONS[activeSectionIdx + 1]
       : null;
 
   const totalMissingCount =
-    workspace.progress.missingRequiredItems.length + workspace.progress.pendingAssetSlots.length;
+    workspace.progress.missingRequiredItems.length +
+    workspace.progress.pendingAssetSlots.length;
   const isPortalLocked =
     isClientPortal &&
-    (workspace.client.status === 'completed' || workspace.client.status === 'archived');
+    (workspace.client.status === "completed" ||
+      workspace.client.status === "archived");
 
   const getCurrentPayload = (): AnySectionData => {
     switch (activeSectionKey) {
-      case 'company_info':
+      case "company_info":
         return companyForm;
-      case 'brand_assets':
+      case "brand_assets":
         return brandForm;
-      case 'website_content':
+      case "website_content":
         return contentForm;
-      case 'project_requirements':
+      case "project_requirements":
         return reqForm;
-      case 'access_credentials':
+      case "access_credentials":
         return accessMetaForm;
-      case 'additional_documents':
+      case "additional_documents":
         return docsMetaForm;
     }
   };
@@ -300,7 +344,9 @@ export function OnboardingWorkspaceView({
 
     if (activeSection.required) {
       for (const reqField of def.requiredFields) {
-        if (!isOnboardingValueFilled(getNestedObjectValue(payload, reqField.path))) {
+        if (
+          !isOnboardingValueFilled(getNestedObjectValue(payload, reqField.path))
+        ) {
           missing.push(`${reqField.label} is required`);
         }
       }
@@ -313,17 +359,24 @@ export function OnboardingWorkspaceView({
         }
       }
       if (
-        def.key === 'access_credentials' &&
+        def.key === "access_credentials" &&
         workspace.credentials.length === 0 &&
         !accessMetaForm.delegatedAccessNotes.trim()
       ) {
-        missing.push('Add at least one encrypted credential or enter delegated access notes');
+        missing.push(
+          "Add at least one encrypted credential or enter delegated access notes",
+        );
       }
     }
 
-    if (activeSectionKey === 'company_info' && companyForm.contactEmail.trim()) {
-      const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(companyForm.contactEmail.trim());
-      if (!emailOk) missing.push('Contact Email must be a valid email address');
+    if (
+      activeSectionKey === "company_info" &&
+      companyForm.contactEmail.trim()
+    ) {
+      const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+        companyForm.contactEmail.trim(),
+      );
+      if (!emailOk) missing.push("Contact Email must be a valid email address");
     }
 
     return missing;
@@ -337,8 +390,8 @@ export function OnboardingWorkspaceView({
         setJustSubmittedSection(null);
         dispatch(
           showToast({
-            severity: 'warning',
-            text: 'Please complete the highlighted required items before submitting.',
+            severity: "warning",
+            text: "Please complete the highlighted required items before submitting.",
           }),
         );
         return;
@@ -360,7 +413,7 @@ export function OnboardingWorkspaceView({
       }
       dispatch(
         showToast({
-          severity: 'success',
+          severity: "success",
           text: markComplete
             ? `${activeSection.title} submitted`
             : `Draft saved for ${activeSection.title}`,
@@ -372,12 +425,15 @@ export function OnboardingWorkspaceView({
         setValidationErrors(missing);
       }
       dispatch(
-        showToast({ severity: 'error', text: getApiErrorMessage(err, 'Failed to save section') }),
+        showToast({
+          severity: "error",
+          text: getApiErrorMessage(err, "Failed to save section"),
+        }),
       );
     }
   };
 
-  const handleReview = async (decision: 'completed' | 'needs_revision') => {
+  const handleReview = async (decision: "completed" | "needs_revision") => {
     try {
       await reviewSection({
         clientId: workspace.client.id,
@@ -385,18 +441,23 @@ export function OnboardingWorkspaceView({
         decision,
         note: reviewNote,
       }).unwrap();
-      setReviewNote('');
+      setReviewNote("");
       dispatch(
         showToast({
-          severity: 'success',
+          severity: "success",
           text:
-            decision === 'completed'
+            decision === "completed"
               ? `Approved ${activeSection.title}`
               : `Requested revision on ${activeSection.title}`,
         }),
       );
     } catch {
-      dispatch(showToast({ severity: 'error', text: 'Unable to submit review decision' }));
+      dispatch(
+        showToast({
+          severity: "error",
+          text: "Unable to submit review decision",
+        }),
+      );
     }
   };
 
@@ -406,9 +467,19 @@ export function OnboardingWorkspaceView({
         id: workspace.client.id,
         patch: { internalNotes: notesDraft },
       }).unwrap();
-      dispatch(showToast({ severity: 'success', text: 'Internal agency notes updated' }));
+      dispatch(
+        showToast({
+          severity: "success",
+          text: "Internal agency notes updated",
+        }),
+      );
     } catch {
-      dispatch(showToast({ severity: 'error', text: 'Failed to update internal notes' }));
+      dispatch(
+        showToast({
+          severity: "error",
+          text: "Failed to update internal notes",
+        }),
+      );
     }
   };
 
@@ -429,77 +500,89 @@ export function OnboardingWorkspaceView({
             mb: 3,
             bgcolor: themePalette.background.darkSurface,
             color: themePalette.text.onDark,
-            borderColor: 'rgba(255,255,255,0.08)',
+            borderColor: "rgba(255,255,255,0.08)",
           }}
         >
           <CardContent sx={{ p: { xs: 2.5, sm: 3.5 } }}>
-            <Grid container spacing={3} sx={{ alignItems: 'center' }}>
+            <Grid container spacing={3} sx={{ alignItems: "center" }}>
               <Grid size={{ xs: 12, lg: 6 }}>
                 <Typography
                   variant="caption"
                   sx={{
-                    display: 'block',
+                    display: "block",
                     color: themePalette.accent.main,
                     fontFamily: FONT_DISPLAY,
                     fontWeight: 700,
-                    letterSpacing: '0.06em',
-                    textTransform: 'uppercase',
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
                     mb: 0.75,
                   }}
                 >
                   QavonFlow Client Portal · {workspace.client.companyName}
                 </Typography>
-                <Typography variant="h1" sx={{ color: themePalette.text.onDark, mb: 1 }}>
+                <Typography
+                  variant="h1"
+                  sx={{ color: themePalette.text.onDark, mb: 1 }}
+                >
                   Welcome, {workspace.client.contactName}
                 </Typography>
-                <Typography variant="body2" sx={{ color: themePalette.text.onDarkMuted, maxWidth: 520 }}>
-                  Everything needed to kick off your project lives here. Work through the sections below at your own pace — save drafts anytime and submit each module when ready.
+                <Typography
+                  variant="body2"
+                  sx={{ color: themePalette.text.onDarkMuted, maxWidth: 520 }}
+                >
+                  Everything needed to kick off your project lives here. Work
+                  through the sections below at your own pace — save drafts
+                  anytime and submit each module when ready.
                 </Typography>
               </Grid>
               <Grid size={{ xs: 12, lg: 6 }}>
                 <Grid container spacing={1.5}>
                   {[
                     {
-                      num: '01',
-                      title: 'Fill Required Modules',
-                      desc: 'Provide company, copy, & brief details',
+                      num: "01",
+                      title: "Fill Required Modules",
+                      desc: "Provide company, copy, & brief details",
                     },
                     {
-                      num: '02',
-                      title: 'Upload Brand Files',
-                      desc: 'Add primary logo, guidelines, & media',
+                      num: "02",
+                      title: "Upload Brand Files",
+                      desc: "Add primary logo, guidelines, & media",
                     },
                     {
-                      num: '03',
-                      title: 'Submit for Review',
-                      desc: 'Track completion & agency approval',
+                      num: "03",
+                      title: "Submit for Review",
+                      desc: "Track completion & agency approval",
                     },
                   ].map((step) => (
                     <Grid key={step.num} size={{ xs: 12, sm: 4 }}>
                       <Box
                         sx={{
                           p: 1.5,
-                          borderRadius: '8px',
-                          bgcolor: 'rgba(255,255,255,0.06)',
-                          border: '1px solid rgba(255,255,255,0.08)',
-                          height: '100%',
+                          borderRadius: "8px",
+                          bgcolor: "rgba(255,255,255,0.06)",
+                          border: "1px solid rgba(255,255,255,0.08)",
+                          height: "100%",
                         }}
                       >
-                        <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 0.5 }}>
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          sx={{ alignItems: "center", mb: 0.5 }}
+                        >
                           <Box
                             sx={{
                               width: 22,
                               height: 22,
-                              borderRadius: '5px',
+                              borderRadius: "5px",
                               bgcolor: themePalette.accent.main,
                               color: themePalette.primary.main,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
                               fontFamily: FONT_DISPLAY,
                               fontWeight: 700,
-                              fontSize: '0.75rem',
-                              fontVariantNumeric: 'tabular-nums',
+                              fontSize: "0.75rem",
+                              fontVariantNumeric: "tabular-nums",
                               flexShrink: 0,
                             }}
                           >
@@ -507,12 +590,18 @@ export function OnboardingWorkspaceView({
                           </Box>
                           <Typography
                             variant="subtitle2"
-                            sx={{ color: themePalette.text.onDark, fontSize: '0.8125rem' }}
+                            sx={{
+                              color: themePalette.text.onDark,
+                              fontSize: "0.8125rem",
+                            }}
                           >
                             {step.title}
                           </Typography>
                         </Stack>
-                        <Typography variant="caption" sx={{ color: themePalette.text.onDarkMuted }}>
+                        <Typography
+                          variant="caption"
+                          sx={{ color: themePalette.text.onDarkMuted }}
+                        >
                           {step.desc}
                         </Typography>
                       </Box>
@@ -529,12 +618,19 @@ export function OnboardingWorkspaceView({
           subtitle={`${workspace.client.industry} · Contact: ${workspace.client.contactName} (${workspace.client.email})`}
           actions={
             clientsData?.clients ? (
-              <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap', alignItems: 'center' }}>
+              <Stack
+                direction="row"
+                spacing={1}
+                useFlexGap
+                sx={{ flexWrap: "wrap", alignItems: "center" }}
+              >
                 <TextField
                   select
                   label="Switch Client"
                   value={workspace.client.id}
-                  onChange={(e) => dispatch(setSelectedClientId(e.target.value))}
+                  onChange={(e) =>
+                    dispatch(setSelectedClientId(e.target.value))
+                  }
                   sx={{ minWidth: { xs: 190, sm: 220 } }}
                 >
                   {clientsData.clients.map((c) => (
@@ -570,37 +666,57 @@ export function OnboardingWorkspaceView({
       )}
 
       {/* Workspace Status Alerts */}
-      {workspace.client.status === 'completed' && (
-        <Alert severity="success" icon={<CheckCircle2 size={18} />} sx={{ mb: 2.5 }}>
-          <strong>Onboarding Complete & Approved:</strong> All required onboarding modules and assets have been submitted and verified
-          {isClientPortal ? '. This workspace is now read-only.' : '.'}
+      {workspace.client.status === "completed" && (
+        <Alert
+          severity="success"
+          icon={<CheckCircle2 size={18} />}
+          sx={{ mb: 2.5 }}
+        >
+          <strong>Onboarding Complete & Approved:</strong> All required
+          onboarding modules and assets have been submitted and verified
+          {isClientPortal ? ". This workspace is now read-only." : "."}
         </Alert>
       )}
-      {workspace.client.status === 'in_review' && (
+      {workspace.client.status === "in_review" && (
         <Alert severity="info" sx={{ mb: 2.5 }}>
-          <strong>Submitted for Agency Review:</strong> All required onboarding sections are submitted ({workspace.progress.completedSections} of {workspace.progress.totalSections} complete). Our team is reviewing your files and details.
+          <strong>Submitted for Agency Review:</strong> All required onboarding
+          sections are submitted ({workspace.progress.completedSections} of{" "}
+          {workspace.progress.totalSections} complete). Our team is reviewing
+          your files and details.
         </Alert>
       )}
       {sectionsNeedingRevision.length > 0 && (
-        <Alert severity="warning" icon={<AlertTriangle size={18} />} sx={{ mb: 2.5 }}>
-          <Typography variant="subtitle2" sx={{ color: 'inherit', mb: 0.25 }}>
-            Action Requested — {sectionsNeedingRevision.length}{' '}
-            {sectionsNeedingRevision.length === 1 ? 'section needs' : 'sections need'} revision:
+        <Alert
+          severity="warning"
+          icon={<AlertTriangle size={18} />}
+          sx={{ mb: 2.5 }}
+        >
+          <Typography variant="subtitle2" sx={{ color: "inherit", mb: 0.25 }}>
+            Action Requested — {sectionsNeedingRevision.length}{" "}
+            {sectionsNeedingRevision.length === 1
+              ? "section needs"
+              : "sections need"}{" "}
+            revision:
           </Typography>
-          <Stack direction="row" spacing={1.5} useFlexGap sx={{ flexWrap: 'wrap' }}>
+          <Stack
+            direction="row"
+            spacing={1.5}
+            useFlexGap
+            sx={{ flexWrap: "wrap" }}
+          >
             {sectionsNeedingRevision.map((sec) => (
               <Typography
                 key={sec.sectionKey}
                 variant="caption"
                 onClick={() => {
-                  setWorkspaceTab('modules');
+                  setWorkspaceTab("modules");
                   setActiveSectionKey(sec.sectionKey);
                 }}
                 sx={{
-                  cursor: 'pointer',
-                  color: 'inherit',
+                  cursor: "pointer",
+                  color: "inherit",
                   fontWeight: 600,
-                  textDecoration: 'underline',
+                  textDecoration: "underline",
                 }}
               >
                 Open {sec.title}
@@ -613,10 +729,19 @@ export function OnboardingWorkspaceView({
       {/* Dynamic Progress Summary Banner */}
       <Card sx={{ mb: 3 }}>
         <CardContent sx={{ p: { xs: 2.5, sm: 3 } }}>
-          <Grid container spacing={3} sx={{ alignItems: 'center' }}>
+          <Grid container spacing={3} sx={{ alignItems: "center" }}>
             <Grid size={{ xs: 12, md: 7 }}>
-              <Stack direction="row" sx={{ mb: 1, justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="h4">Overall Onboarding Progress</Typography>
+              <Stack
+                direction="row"
+                sx={{
+                  mb: 1,
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <Typography variant="h4">
+                  Overall Onboarding Progress
+                </Typography>
                 <StatusBadge status={workspace.client.status} kind="client" />
               </Stack>
               <ProgressIndicator
@@ -628,52 +753,75 @@ export function OnboardingWorkspaceView({
                 direction="row"
                 spacing={2}
                 useFlexGap
-                sx={{ mt: 1, flexWrap: 'wrap', alignItems: 'center' }}
+                sx={{ mt: 1, flexWrap: "wrap", alignItems: "center" }}
               >
                 {workspace.client.dueDate && (
-                  <Typography variant="caption" sx={{ fontVariantNumeric: 'tabular-nums' }}>
-                    Target completion date: {formatShortDate(workspace.client.dueDate)}
+                  <Typography
+                    variant="caption"
+                    sx={{ fontVariantNumeric: "tabular-nums" }}
+                  >
+                    Target completion date:{" "}
+                    {formatShortDate(workspace.client.dueDate)}
                   </Typography>
                 )}
-                <Typography variant="caption" sx={{ fontVariantNumeric: 'tabular-nums' }}>
-                  {workspace.assets.length} {workspace.assets.length === 1 ? 'file' : 'files'} uploaded ·{' '}
-                  {workspace.credentials.length} encrypted{' '}
-                  {workspace.credentials.length === 1 ? 'entry' : 'entries'}
+                <Typography
+                  variant="caption"
+                  sx={{ fontVariantNumeric: "tabular-nums" }}
+                >
+                  {workspace.assets.length}{" "}
+                  {workspace.assets.length === 1 ? "file" : "files"} uploaded ·{" "}
+                  {workspace.credentials.length} encrypted{" "}
+                  {workspace.credentials.length === 1 ? "entry" : "entries"}
                 </Typography>
               </Stack>
             </Grid>
             <Grid size={{ xs: 12, md: 5 }}>
-              <Typography variant="subtitle2" sx={{ color: themePalette.text.primary, mb: 0.75 }}>
+              <Typography
+                variant="subtitle2"
+                sx={{ color: themePalette.text.primary, mb: 0.75 }}
+              >
                 {totalMissingCount === 0
-                  ? 'Required Checklist Complete'
+                  ? "Required Checklist Complete"
                   : `Still Missing (${totalMissingCount})`}
               </Typography>
               {totalMissingCount === 0 ? (
-                <Typography variant="body2" sx={{ color: themePalette.status.success, fontWeight: 500 }}>
+                <Typography
+                  variant="body2"
+                  sx={{ color: themePalette.status.success, fontWeight: 500 }}
+                >
                   All required onboarding items and asset slots are fulfilled.
                 </Typography>
               ) : (
                 <Stack spacing={0.5}>
-                  {workspace.progress.missingRequiredItems.slice(0, 4).map((m, idx) => (
-                    <Typography
-                      key={`${m.sectionKey}-${idx}`}
-                      variant="caption"
-                      onClick={() => {
-                        setWorkspaceTab('modules');
-                        setActiveSectionKey(m.sectionKey);
-                      }}
-                      sx={{
-                        cursor: 'pointer',
-                        color: themePalette.text.secondary,
-                        '&:hover': { color: themePalette.text.primary, textDecoration: 'underline' },
-                      }}
-                    >
-                      • {m.sectionTitle}: {m.fieldLabel}
-                    </Typography>
-                  ))}
+                  {workspace.progress.missingRequiredItems
+                    .slice(0, 4)
+                    .map((m, idx) => (
+                      <Typography
+                        key={`${m.sectionKey}-${idx}`}
+                        variant="caption"
+                        onClick={() => {
+                          setWorkspaceTab("modules");
+                          setActiveSectionKey(m.sectionKey);
+                        }}
+                        sx={{
+                          cursor: "pointer",
+                          color: themePalette.text.secondary,
+                          "&:hover": {
+                            color: themePalette.text.primary,
+                            textDecoration: "underline",
+                          },
+                        }}
+                      >
+                        • {m.sectionTitle}: {m.fieldLabel}
+                      </Typography>
+                    ))}
                   {workspace.progress.missingRequiredItems.length > 4 && (
-                    <Typography variant="caption" sx={{ color: themePalette.text.muted }}>
-                      + {workspace.progress.missingRequiredItems.length - 4} more items across incomplete sections
+                    <Typography
+                      variant="caption"
+                      sx={{ color: themePalette.text.muted }}
+                    >
+                      + {workspace.progress.missingRequiredItems.length - 4}{" "}
+                      more items across incomplete sections
                     </Typography>
                   )}
                   {workspace.progress.pendingAssetSlots.map((slot) => (
@@ -681,13 +829,16 @@ export function OnboardingWorkspaceView({
                       key={slot.category}
                       variant="caption"
                       onClick={() => {
-                        setWorkspaceTab('modules');
-                        setActiveSectionKey('brand_assets');
+                        setWorkspaceTab("modules");
+                        setActiveSectionKey("brand_assets");
                       }}
                       sx={{
-                        cursor: 'pointer',
+                        cursor: "pointer",
                         color: themePalette.text.secondary,
-                        '&:hover': { color: themePalette.text.primary, textDecoration: 'underline' },
+                        "&:hover": {
+                          color: themePalette.text.primary,
+                          textDecoration: "underline",
+                        },
                       }}
                     >
                       • Pending upload: {slot.label}
@@ -702,85 +853,140 @@ export function OnboardingWorkspaceView({
 
       {/* Agency Staff View Switcher (NEVER rendered in Client Portal) */}
       {!isClientPortal && (
-        <Box sx={{ mb: 2.5, borderBottom: `1px solid ${themePalette.divider}` }}>
+        <Box
+          sx={{ mb: 2.5, borderBottom: `1px solid ${themePalette.divider}` }}
+        >
           <Tabs
             value={workspaceTab}
-            onChange={(_, val: 'modules' | 'profile' | 'activity') => setWorkspaceTab(val)}
+            onChange={(_, val: "modules" | "profile" | "activity") =>
+              setWorkspaceTab(val)
+            }
             variant="scrollable"
             scrollButtons="auto"
           >
             <Tab value="modules" label="Onboarding Modules" />
             <Tab value="profile" label="Client Profile & Notes" />
-            <Tab value="activity" label={`Client Activity (${clientActivity.length})`} />
+            <Tab
+              value="activity"
+              label={`Client Activity (${clientActivity.length})`}
+            />
           </Tabs>
         </Box>
       )}
 
       {/* TAB: CLIENT PROFILE & NOTES (Agency Staff Only) */}
-      {!isClientPortal && workspaceTab === 'profile' && (
+      {!isClientPortal && workspaceTab === "profile" && (
         <Grid container spacing={3}>
           <Grid size={{ xs: 12, md: 7 }}>
             <Card>
               <CardContent sx={{ p: 3 }}>
-                <Stack direction="row" spacing={2} sx={{ mb: 3, alignItems: 'center' }}>
+                <Stack
+                  direction="row"
+                  spacing={2}
+                  sx={{ mb: 3, alignItems: "center" }}
+                >
                   <ClientAvatar name={workspace.client.companyName} size={48} />
                   <Box sx={{ minWidth: 0 }}>
-                    <Typography variant="h3">{workspace.client.companyName}</Typography>
-                    <Typography variant="body2">{workspace.client.industry}</Typography>
+                    <Typography variant="h3">
+                      {workspace.client.companyName}
+                    </Typography>
+                    <Typography variant="body2">
+                      {workspace.client.industry}
+                    </Typography>
                   </Box>
                 </Stack>
 
                 <Grid container spacing={2}>
                   <Grid size={{ xs: 12, sm: 6 }}>
-                    <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 0.25 }}>
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      sx={{ alignItems: "center", mb: 0.25 }}
+                    >
                       <User size={14} color={themePalette.text.muted} />
                       <Typography variant="caption">Primary Contact</Typography>
                     </Stack>
-                    <Typography variant="body2" sx={{ color: themePalette.text.primary, fontWeight: 500 }}>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: themePalette.text.primary, fontWeight: 500 }}
+                    >
                       {workspace.client.contactName}
                     </Typography>
                   </Grid>
                   <Grid size={{ xs: 12, sm: 6 }}>
-                    <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 0.25 }}>
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      sx={{ alignItems: "center", mb: 0.25 }}
+                    >
                       <Mail size={14} color={themePalette.text.muted} />
                       <Typography variant="caption">Email</Typography>
                     </Stack>
-                    <Typography variant="body2" sx={{ color: themePalette.text.primary }}>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: themePalette.text.primary }}
+                    >
                       {workspace.client.email}
                     </Typography>
                   </Grid>
                   <Grid size={{ xs: 12, sm: 6 }}>
-                    <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 0.25 }}>
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      sx={{ alignItems: "center", mb: 0.25 }}
+                    >
                       <Phone size={14} color={themePalette.text.muted} />
                       <Typography variant="caption">Phone</Typography>
                     </Stack>
-                    <Typography variant="body2" sx={{ color: themePalette.text.primary }}>
-                      {workspace.client.phone || 'Not provided'}
+                    <Typography
+                      variant="body2"
+                      sx={{ color: themePalette.text.primary }}
+                    >
+                      {workspace.client.phone || "Not provided"}
                     </Typography>
                   </Grid>
                   <Grid size={{ xs: 12, sm: 6 }}>
-                    <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 0.25 }}>
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      sx={{ alignItems: "center", mb: 0.25 }}
+                    >
                       <Globe size={14} color={themePalette.text.muted} />
                       <Typography variant="caption">Website</Typography>
                     </Stack>
-                    <Typography variant="body2" sx={{ color: themePalette.text.primary }}>
-                      {workspace.client.website || 'Not provided'}
+                    <Typography
+                      variant="body2"
+                      sx={{ color: themePalette.text.primary }}
+                    >
+                      {workspace.client.website || "Not provided"}
                     </Typography>
                   </Grid>
                   <Grid size={{ xs: 12, sm: 6 }}>
-                    <Typography variant="caption" sx={{ display: 'block', mb: 0.25 }}>
+                    <Typography
+                      variant="caption"
+                      sx={{ display: "block", mb: 0.25 }}
+                    >
                       Assigned Producer
                     </Typography>
-                    <Typography variant="body2" sx={{ color: themePalette.text.primary, fontWeight: 500 }}>
-                      {fullClientRecord?.assignedToName || 'Unassigned'}
+                    <Typography
+                      variant="body2"
+                      sx={{ color: themePalette.text.primary, fontWeight: 500 }}
+                    >
+                      {fullClientRecord?.assignedToName || "Unassigned"}
                     </Typography>
                   </Grid>
                   <Grid size={{ xs: 12, sm: 6 }}>
-                    <Typography variant="caption" sx={{ display: 'block', mb: 0.25 }}>
+                    <Typography
+                      variant="caption"
+                      sx={{ display: "block", mb: 0.25 }}
+                    >
                       Latest Invitation
                     </Typography>
                     {fullClientRecord?.latestInvitationStatus ? (
-                      <StatusBadge status={fullClientRecord.latestInvitationStatus} kind="invitation" />
+                      <StatusBadge
+                        status={fullClientRecord.latestInvitationStatus}
+                        kind="invitation"
+                      />
                     ) : (
                       <Typography variant="body2">Not invited yet</Typography>
                     )}
@@ -790,10 +996,15 @@ export function OnboardingWorkspaceView({
                 {workspace.client.description && (
                   <>
                     <Divider sx={{ my: 2.5 }} />
-                    <Typography variant="subtitle2" sx={{ color: themePalette.text.primary, mb: 0.5 }}>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ color: themePalette.text.primary, mb: 0.5 }}
+                    >
                       Project Brief
                     </Typography>
-                    <Typography variant="body2">{workspace.client.description}</Typography>
+                    <Typography variant="body2">
+                      {workspace.client.description}
+                    </Typography>
                   </>
                 )}
               </CardContent>
@@ -806,8 +1017,9 @@ export function OnboardingWorkspaceView({
                 <Typography variant="h4" sx={{ mb: 0.5 }}>
                   Internal Agency Notes
                 </Typography>
-                <Typography variant="caption" sx={{ display: 'block', mb: 2 }}>
-                  Private delivery notes for agency staff. Never visible inside the client portal.
+                <Typography variant="caption" sx={{ display: "block", mb: 2 }}>
+                  Private delivery notes for agency staff. Never visible inside
+                  the client portal.
                 </Typography>
                 <TextField
                   multiline
@@ -825,7 +1037,7 @@ export function OnboardingWorkspaceView({
                   startIcon={<Save size={15} />}
                   onClick={handleSaveNotes}
                 >
-                  {updatingNotes ? 'Saving...' : 'Save Internal Notes'}
+                  {updatingNotes ? "Saving..." : "Save Internal Notes"}
                 </Button>
               </CardContent>
             </Card>
@@ -834,7 +1046,7 @@ export function OnboardingWorkspaceView({
       )}
 
       {/* TAB: CLIENT ACTIVITY HISTORY (Agency Staff Only) */}
-      {!isClientPortal && workspaceTab === 'activity' && (
+      {!isClientPortal && workspaceTab === "activity" && (
         <Card>
           <CardContent sx={{ p: 3 }}>
             <Typography variant="h4" sx={{ mb: 2 }}>
@@ -851,15 +1063,25 @@ export function OnboardingWorkspaceView({
                 {clientActivity.map((log) => (
                   <Stack
                     key={log.id}
-                    direction={{ xs: 'column', sm: 'row' }}
+                    direction={{ xs: "column", sm: "row" }}
                     spacing={1}
-                    sx={{ py: 1.5, justifyContent: 'space-between', alignItems: { sm: 'center' } }}
+                    sx={{
+                      py: 1.5,
+                      justifyContent: "space-between",
+                      alignItems: { sm: "center" },
+                    }}
                   >
                     <Box>
-                      <Typography variant="subtitle2" sx={{ color: themePalette.text.primary }}>
+                      <Typography
+                        variant="subtitle2"
+                        sx={{ color: themePalette.text.primary }}
+                      >
                         {log.action}
                       </Typography>
-                      <Typography variant="body2" sx={{ fontSize: '0.84375rem' }}>
+                      <Typography
+                        variant="body2"
+                        sx={{ fontSize: "0.84375rem" }}
+                      >
                         {log.details}
                       </Typography>
                       <Typography variant="caption">
@@ -868,9 +1090,13 @@ export function OnboardingWorkspaceView({
                     </Box>
                     <Typography
                       variant="caption"
-                      sx={{ fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}
+                      sx={{
+                        fontVariantNumeric: "tabular-nums",
+                        whiteSpace: "nowrap",
+                      }}
                     >
-                      {formatShortDate(log.createdAt)} · {formatRelativeTime(log.createdAt)}
+                      {formatShortDate(log.createdAt)} ·{" "}
+                      {formatRelativeTime(log.createdAt)}
                     </Typography>
                   </Stack>
                 ))}
@@ -881,27 +1107,29 @@ export function OnboardingWorkspaceView({
       )}
 
       {/* TAB: ONBOARDING MODULES (Always shown in Client Portal, and default tab for Agency) */}
-      {(isClientPortal || workspaceTab === 'modules') && (
+      {(isClientPortal || workspaceTab === "modules") && (
         <Grid container spacing={3}>
           {/* Mobile Section Picker */}
-          <Grid size={{ xs: 12 }} sx={{ display: { xs: 'block', md: 'none' } }}>
+          <Grid size={{ xs: 12 }} sx={{ display: { xs: "block", md: "none" } }}>
             <TextField
               select
               label="Onboarding Section"
               fullWidth
               value={activeSectionKey}
-              onChange={(e) => setActiveSectionKey(e.target.value as OnboardingSectionKey)}
+              onChange={(e) =>
+                setActiveSectionKey(e.target.value as OnboardingSectionKey)
+              }
             >
               {ONBOARDING_SECTIONS.map((def, idx) => {
                 const secState = sectionByKey.get(def.key);
                 const statusText =
-                  secState?.status === 'completed'
-                    ? 'Submitted'
-                    : secState?.status === 'needs_revision'
-                      ? 'Needs Revision'
-                      : secState?.status === 'in_progress'
-                        ? 'Draft Saved'
-                        : 'Not Started';
+                  secState?.status === "completed"
+                    ? "Submitted"
+                    : secState?.status === "needs_revision"
+                      ? "Needs Revision"
+                      : secState?.status === "in_progress"
+                        ? "Draft Saved"
+                        : "Not Started";
                 return (
                   <MenuItem key={def.key} value={def.key}>
                     {idx + 1}. {def.title} ({statusText})
@@ -912,14 +1140,17 @@ export function OnboardingWorkspaceView({
           </Grid>
 
           {/* Desktop Section Stepper */}
-          <Grid size={{ md: 4, lg: 3.5 }} sx={{ display: { xs: 'none', md: 'block' } }}>
+          <Grid
+            size={{ md: 4, lg: 3.5 }}
+            sx={{ display: { xs: "none", md: "block" } }}
+          >
             <Card>
               <List disablePadding>
                 {ONBOARDING_SECTIONS.map((def, idx) => {
                   const secState = sectionByKey.get(def.key);
                   const selected = activeSectionKey === def.key;
-                  const isComplete = secState?.status === 'completed';
-                  const needsFix = secState?.status === 'needs_revision';
+                  const isComplete = secState?.status === "completed";
+                  const needsFix = secState?.status === "needs_revision";
                   return (
                     <Box key={def.key}>
                       {idx > 0 && <Divider />}
@@ -929,9 +1160,11 @@ export function OnboardingWorkspaceView({
                         sx={{
                           py: 1.5,
                           px: 2,
-                          bgcolor: selected ? themePalette.accent.soft : 'transparent',
-                          borderLeft: `3px solid ${selected ? themePalette.accent.main : 'transparent'}`,
-                          '&.Mui-selected': {
+                          bgcolor: selected
+                            ? themePalette.accent.soft
+                            : "transparent",
+                          borderLeft: `3px solid ${selected ? themePalette.accent.main : "transparent"}`,
+                          "&.Mui-selected": {
                             bgcolor: themePalette.accent.soft,
                           },
                         }}
@@ -941,7 +1174,10 @@ export function OnboardingWorkspaceView({
                             <Stack
                               direction="row"
                               spacing={1}
-                              sx={{ justifyContent: 'space-between', alignItems: 'center' }}
+                              sx={{
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                              }}
                             >
                               <Typography
                                 variant="subtitle2"
@@ -953,10 +1189,16 @@ export function OnboardingWorkspaceView({
                                 {idx + 1}. {def.title}
                               </Typography>
                               {isComplete && (
-                                <CheckCircle2 size={15} color={themePalette.status.success} />
+                                <CheckCircle2
+                                  size={15}
+                                  color={themePalette.status.success}
+                                />
                               )}
                               {needsFix && (
-                                <AlertTriangle size={15} color={themePalette.status.warning} />
+                                <AlertTriangle
+                                  size={15}
+                                  color={themePalette.status.warning}
+                                />
                               )}
                             </Stack>
                           }
@@ -964,14 +1206,21 @@ export function OnboardingWorkspaceView({
                             <Stack
                               direction="row"
                               spacing={1}
-                              sx={{ mt: 0.625, alignItems: 'center', justifyContent: 'space-between' }}
+                              sx={{
+                                mt: 0.625,
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                              }}
                             >
                               <StatusBadge
-                                status={secState?.status || 'not_started'}
+                                status={secState?.status || "not_started"}
                                 kind="section"
                               />
-                              <Typography variant="caption" sx={{ color: themePalette.text.muted }}>
-                                {secState?.required ? 'Required' : 'Optional'}
+                              <Typography
+                                variant="caption"
+                                sx={{ color: themePalette.text.muted }}
+                              >
+                                {secState?.required ? "Required" : "Optional"}
                               </Typography>
                             </Stack>
                           }
@@ -986,10 +1235,13 @@ export function OnboardingWorkspaceView({
             {!isClientPortal && workspace.client.internalNotes && (
               <Card sx={{ mt: 2 }}>
                 <CardContent sx={{ p: 2 }}>
-                  <Typography variant="subtitle2" sx={{ color: themePalette.text.primary, mb: 0.5 }}>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{ color: themePalette.text.primary, mb: 0.5 }}
+                  >
                     Internal Agency Notes
                   </Typography>
-                  <Typography variant="body2" sx={{ fontSize: '0.8125rem' }}>
+                  <Typography variant="body2" sx={{ fontSize: "0.8125rem" }}>
                     {workspace.client.internalNotes}
                   </Typography>
                 </CardContent>
@@ -1001,51 +1253,61 @@ export function OnboardingWorkspaceView({
             <Card>
               <CardContent sx={{ p: { xs: 2.5, sm: 3.5 } }}>
                 <Stack
-                  direction={{ xs: 'column', sm: 'row' }}
+                  direction={{ xs: "column", sm: "row" }}
                   spacing={1.5}
                   sx={{
                     mb: 2,
-                    justifyContent: 'space-between',
-                    alignItems: { xs: 'flex-start', sm: 'center' },
+                    justifyContent: "space-between",
+                    alignItems: { xs: "flex-start", sm: "center" },
                   }}
                 >
                   <Box>
-                    <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 0.375 }}>
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      sx={{ alignItems: "center", mb: 0.375 }}
+                    >
                       <Typography
                         variant="caption"
                         sx={{
                           fontFamily: FONT_DISPLAY,
                           fontWeight: 600,
                           color: themePalette.text.secondary,
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.04em',
+                          textTransform: "uppercase",
+                          letterSpacing: "0.04em",
                         }}
                       >
-                        Step {activeSectionIdx + 1} of {ONBOARDING_SECTIONS.length} ·{' '}
-                        {activeSection.required ? 'Required Module' : 'Optional Module'}
+                        Step {activeSectionIdx + 1} of{" "}
+                        {ONBOARDING_SECTIONS.length} ·{" "}
+                        {activeSection.required
+                          ? "Required Module"
+                          : "Optional Module"}
                       </Typography>
                     </Stack>
                     <Typography variant="h2">{activeSection.title}</Typography>
-                    <Typography variant="body2">{activeSection.description}</Typography>
+                    <Typography variant="body2">
+                      {activeSection.description}
+                    </Typography>
                   </Box>
                   <StatusBadge status={activeSection.status} kind="section" />
                 </Stack>
 
                 {/* Submission Confirmation Banner */}
-                {(justSubmittedSection === activeSectionKey || activeSection.status === 'completed') && (
+                {(justSubmittedSection === activeSectionKey ||
+                  activeSection.status === "completed") && (
                   <Alert
                     severity="success"
                     icon={<CheckCircle2 size={18} />}
                     sx={{
                       mb: 2.5,
-                      flexWrap: { xs: 'wrap', sm: 'nowrap' },
-                      '& .MuiAlert-message': { flex: 1, minWidth: 200 },
-                      '& .MuiAlert-action': {
+                      flexWrap: { xs: "wrap", sm: "nowrap" },
+                      "& .MuiAlert-message": { flex: 1, minWidth: 200 },
+                      "& .MuiAlert-action": {
                         pt: { xs: 1, sm: 0 },
                         pl: { xs: 0, sm: 2 },
-                        ml: { xs: 0, sm: 'auto' },
-                        width: { xs: '100%', sm: 'auto' },
-                        justifyContent: { xs: 'flex-start', sm: 'flex-end' },
+                        ml: { xs: 0, sm: "auto" },
+                        width: { xs: "100%", sm: "auto" },
+                        justifyContent: { xs: "flex-start", sm: "flex-end" },
                       },
                     }}
                     action={
@@ -1062,29 +1324,44 @@ export function OnboardingWorkspaceView({
                     }
                   >
                     <strong>Section Submitted</strong>
-                    {activeSection.updatedAt ? ` (${formatShortDate(activeSection.updatedAt)})` : ''}.{' '}
+                    {activeSection.updatedAt
+                      ? ` (${formatShortDate(activeSection.updatedAt)})`
+                      : ""}
+                    .{" "}
                     {isPortalLocked
-                      ? 'Approved and locked by the agency.'
-                      : 'You can still edit details and re-save anytime before final sign-off.'}
+                      ? "Approved and locked by the agency."
+                      : "You can still edit details and re-save anytime before final sign-off."}
                   </Alert>
                 )}
 
                 {activeSection.reviewerNote && (
                   <Alert
-                    severity={activeSection.status === 'needs_revision' ? 'warning' : 'info'}
+                    severity={
+                      activeSection.status === "needs_revision"
+                        ? "warning"
+                        : "info"
+                    }
                     sx={{ mb: 2.5 }}
                   >
-                    <strong>Agency Review Note:</strong> {activeSection.reviewerNote}
+                    <strong>Agency Review Note:</strong>{" "}
+                    {activeSection.reviewerNote}
                   </Alert>
                 )}
 
                 {validationErrors.length > 0 && (
                   <Alert severity="error" sx={{ mb: 2.5 }}>
-                    <Typography variant="subtitle2" sx={{ color: 'inherit', mb: 0.5 }}>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ color: "inherit", mb: 0.5 }}
+                    >
                       Please complete before submitting this section:
                     </Typography>
                     {validationErrors.map((msg) => (
-                      <Typography key={msg} variant="body2" sx={{ color: 'inherit', fontSize: '0.8125rem' }}>
+                      <Typography
+                        key={msg}
+                        variant="body2"
+                        sx={{ color: "inherit", fontSize: "0.8125rem" }}
+                      >
                         • {msg}
                       </Typography>
                     ))}
@@ -1094,7 +1371,7 @@ export function OnboardingWorkspaceView({
                 <Divider sx={{ mb: 3 }} />
 
                 {/* SECTION 1: COMPANY INFO */}
-                {activeSectionKey === 'company_info' && (
+                {activeSectionKey === "company_info" && (
                   <Grid container spacing={2}>
                     <Grid size={{ xs: 12, sm: 6 }}>
                       <TextField
@@ -1103,7 +1380,10 @@ export function OnboardingWorkspaceView({
                         fullWidth
                         value={companyForm.companyName}
                         onChange={(e) =>
-                          setCompanyForm({ ...companyForm, companyName: e.target.value })
+                          setCompanyForm({
+                            ...companyForm,
+                            companyName: e.target.value,
+                          })
                         }
                       />
                     </Grid>
@@ -1114,7 +1394,10 @@ export function OnboardingWorkspaceView({
                         fullWidth
                         value={companyForm.industry}
                         onChange={(e) =>
-                          setCompanyForm({ ...companyForm, industry: e.target.value })
+                          setCompanyForm({
+                            ...companyForm,
+                            industry: e.target.value,
+                          })
                         }
                       />
                     </Grid>
@@ -1127,7 +1410,10 @@ export function OnboardingWorkspaceView({
                         fullWidth
                         value={companyForm.businessDescription}
                         onChange={(e) =>
-                          setCompanyForm({ ...companyForm, businessDescription: e.target.value })
+                          setCompanyForm({
+                            ...companyForm,
+                            businessDescription: e.target.value,
+                          })
                         }
                       />
                     </Grid>
@@ -1138,7 +1424,10 @@ export function OnboardingWorkspaceView({
                         fullWidth
                         value={companyForm.contactName}
                         onChange={(e) =>
-                          setCompanyForm({ ...companyForm, contactName: e.target.value })
+                          setCompanyForm({
+                            ...companyForm,
+                            contactName: e.target.value,
+                          })
                         }
                       />
                     </Grid>
@@ -1150,7 +1439,10 @@ export function OnboardingWorkspaceView({
                         fullWidth
                         value={companyForm.contactEmail}
                         onChange={(e) =>
-                          setCompanyForm({ ...companyForm, contactEmail: e.target.value })
+                          setCompanyForm({
+                            ...companyForm,
+                            contactEmail: e.target.value,
+                          })
                         }
                       />
                     </Grid>
@@ -1160,7 +1452,10 @@ export function OnboardingWorkspaceView({
                         fullWidth
                         value={companyForm.contactPhone}
                         onChange={(e) =>
-                          setCompanyForm({ ...companyForm, contactPhone: e.target.value })
+                          setCompanyForm({
+                            ...companyForm,
+                            contactPhone: e.target.value,
+                          })
                         }
                       />
                     </Grid>
@@ -1170,7 +1465,10 @@ export function OnboardingWorkspaceView({
                         fullWidth
                         value={companyForm.website}
                         onChange={(e) =>
-                          setCompanyForm({ ...companyForm, website: e.target.value })
+                          setCompanyForm({
+                            ...companyForm,
+                            website: e.target.value,
+                          })
                         }
                       />
                     </Grid>
@@ -1180,7 +1478,10 @@ export function OnboardingWorkspaceView({
                         fullWidth
                         value={companyForm.businessAddress}
                         onChange={(e) =>
-                          setCompanyForm({ ...companyForm, businessAddress: e.target.value })
+                          setCompanyForm({
+                            ...companyForm,
+                            businessAddress: e.target.value,
+                          })
                         }
                       />
                     </Grid>
@@ -1192,7 +1493,10 @@ export function OnboardingWorkspaceView({
                         onChange={(e) =>
                           setCompanyForm({
                             ...companyForm,
-                            socialLinks: { ...companyForm.socialLinks, linkedin: e.target.value },
+                            socialLinks: {
+                              ...companyForm.socialLinks,
+                              linkedin: e.target.value,
+                            },
                           })
                         }
                       />
@@ -1205,7 +1509,10 @@ export function OnboardingWorkspaceView({
                         onChange={(e) =>
                           setCompanyForm({
                             ...companyForm,
-                            socialLinks: { ...companyForm.socialLinks, instagram: e.target.value },
+                            socialLinks: {
+                              ...companyForm.socialLinks,
+                              instagram: e.target.value,
+                            },
                           })
                         }
                       />
@@ -1218,7 +1525,10 @@ export function OnboardingWorkspaceView({
                         onChange={(e) =>
                           setCompanyForm({
                             ...companyForm,
-                            socialLinks: { ...companyForm.socialLinks, twitter: e.target.value },
+                            socialLinks: {
+                              ...companyForm.socialLinks,
+                              twitter: e.target.value,
+                            },
                           })
                         }
                       />
@@ -1231,7 +1541,10 @@ export function OnboardingWorkspaceView({
                         onChange={(e) =>
                           setCompanyForm({
                             ...companyForm,
-                            socialLinks: { ...companyForm.socialLinks, facebook: e.target.value },
+                            socialLinks: {
+                              ...companyForm.socialLinks,
+                              facebook: e.target.value,
+                            },
                           })
                         }
                       />
@@ -1240,7 +1553,7 @@ export function OnboardingWorkspaceView({
                 )}
 
                 {/* SECTION 2: BRAND ASSETS */}
-                {activeSectionKey === 'brand_assets' && (
+                {activeSectionKey === "brand_assets" && (
                   <Stack spacing={3}>
                     <Grid container spacing={2}>
                       <Grid size={{ xs: 12, sm: 6 }}>
@@ -1248,17 +1561,26 @@ export function OnboardingWorkspaceView({
                           clientId={workspace.client.id}
                           category="primary_logo"
                           disabled={isPortalLocked}
-                          label={`Primary Logo (Required${primaryLogoCount > 0 ? ` · ${primaryLogoCount} uploaded` : ''})`}
+                          label={`Primary Logo (Required${primaryLogoCount > 0 ? ` · ${primaryLogoCount} uploaded` : ""})`}
                           helperText={
                             primaryLogoCount > 0
-                              ? 'Primary logo uploaded. Drop another file to add a variant.'
-                              : 'Required · Drag & drop SVG, PNG, or PDF (max 15 MB)'
+                              ? "Primary logo uploaded. Drop another file to add a variant."
+                              : "Required · Drag & drop SVG, PNG, or PDF (max 15 MB)"
                           }
                           onUploaded={() => {
                             refetch();
-                            dispatch(showToast({ severity: 'success', text: 'Primary logo uploaded' }));
+                            dispatch(
+                              showToast({
+                                severity: "success",
+                                text: "Primary logo uploaded",
+                              }),
+                            );
                           }}
-                          onError={(msg) => dispatch(showToast({ severity: 'error', text: msg }))}
+                          onError={(msg) =>
+                            dispatch(
+                              showToast({ severity: "error", text: msg }),
+                            )
+                          }
                         />
                       </Grid>
                       <Grid size={{ xs: 12, sm: 6 }}>
@@ -1266,17 +1588,26 @@ export function OnboardingWorkspaceView({
                           clientId={workspace.client.id}
                           category="secondary_logo"
                           disabled={isPortalLocked}
-                          label={`Secondary / Monochrome Logo${secondaryLogoCount > 0 ? ` (${secondaryLogoCount})` : ''}`}
+                          label={`Secondary / Monochrome Logo${secondaryLogoCount > 0 ? ` (${secondaryLogoCount})` : ""}`}
                           helperText={
                             secondaryLogoCount > 0
                               ? `${secondaryLogoCount} file(s) uploaded · Optional`
-                              : 'Optional · Light/dark mark or lockup'
+                              : "Optional · Light/dark mark or lockup"
                           }
                           onUploaded={() => {
                             refetch();
-                            dispatch(showToast({ severity: 'success', text: 'Secondary logo uploaded' }));
+                            dispatch(
+                              showToast({
+                                severity: "success",
+                                text: "Secondary logo uploaded",
+                              }),
+                            );
                           }}
-                          onError={(msg) => dispatch(showToast({ severity: 'error', text: msg }))}
+                          onError={(msg) =>
+                            dispatch(
+                              showToast({ severity: "error", text: msg }),
+                            )
+                          }
                         />
                       </Grid>
                       <Grid size={{ xs: 12, sm: 6 }}>
@@ -1284,17 +1615,26 @@ export function OnboardingWorkspaceView({
                           clientId={workspace.client.id}
                           category="brand_icon"
                           disabled={isPortalLocked}
-                          label={`Brand Mark / Favicon${brandIconCount > 0 ? ` (${brandIconCount})` : ''}`}
+                          label={`Brand Mark / Favicon${brandIconCount > 0 ? ` (${brandIconCount})` : ""}`}
                           helperText={
                             brandIconCount > 0
                               ? `${brandIconCount} file(s) uploaded · Optional`
-                              : 'Optional · Square SVG or high-res PNG icon'
+                              : "Optional · Square SVG or high-res PNG icon"
                           }
                           onUploaded={() => {
                             refetch();
-                            dispatch(showToast({ severity: 'success', text: 'Brand icon uploaded' }));
+                            dispatch(
+                              showToast({
+                                severity: "success",
+                                text: "Brand icon uploaded",
+                              }),
+                            );
                           }}
-                          onError={(msg) => dispatch(showToast({ severity: 'error', text: msg }))}
+                          onError={(msg) =>
+                            dispatch(
+                              showToast({ severity: "error", text: msg }),
+                            )
+                          }
                         />
                       </Grid>
                       <Grid size={{ xs: 12, sm: 6 }}>
@@ -1302,23 +1642,35 @@ export function OnboardingWorkspaceView({
                           clientId={workspace.client.id}
                           category="brand_guidelines"
                           disabled={isPortalLocked}
-                          label={`Brand Guidelines PDF${brandGuidelinesCount > 0 ? ` (${brandGuidelinesCount})` : ''}`}
+                          label={`Brand Guidelines PDF${brandGuidelinesCount > 0 ? ` (${brandGuidelinesCount})` : ""}`}
                           helperText={
                             brandGuidelinesCount > 0
                               ? `${brandGuidelinesCount} file(s) uploaded · Optional`
-                              : 'Optional · Style guide or brand book PDF'
+                              : "Optional · Style guide or brand book PDF"
                           }
                           onUploaded={() => {
                             refetch();
-                            dispatch(showToast({ severity: 'success', text: 'Brand guidelines uploaded' }));
+                            dispatch(
+                              showToast({
+                                severity: "success",
+                                text: "Brand guidelines uploaded",
+                              }),
+                            );
                           }}
-                          onError={(msg) => dispatch(showToast({ severity: 'error', text: msg }))}
+                          onError={(msg) =>
+                            dispatch(
+                              showToast({ severity: "error", text: msg }),
+                            )
+                          }
                         />
                       </Grid>
                     </Grid>
 
                     <Box>
-                      <Typography variant="subtitle2" sx={{ color: themePalette.text.primary, mb: 1 }}>
+                      <Typography
+                        variant="subtitle2"
+                        sx={{ color: themePalette.text.primary, mb: 1 }}
+                      >
                         Uploaded Brand Files ({brandAssets.length})
                       </Typography>
                       <SectionAssetsList
@@ -1331,14 +1683,17 @@ export function OnboardingWorkspaceView({
                     <Divider />
 
                     <Box>
-                      <Typography variant="subtitle2" sx={{ color: themePalette.text.primary, mb: 1 }}>
+                      <Typography
+                        variant="subtitle2"
+                        sx={{ color: themePalette.text.primary, mb: 1 }}
+                      >
                         Brand Color Palette (Required)
                       </Typography>
                       <Stack
                         direction="row"
                         spacing={1}
                         useFlexGap
-                        sx={{ mb: 1.5, alignItems: 'center', flexWrap: 'wrap' }}
+                        sx={{ mb: 1.5, alignItems: "center", flexWrap: "wrap" }}
                       >
                         {brandForm.brandColors.map((hex, i) => (
                           <Stack
@@ -1346,9 +1701,9 @@ export function OnboardingWorkspaceView({
                             direction="row"
                             spacing={1}
                             sx={{
-                              alignItems: 'center',
+                              alignItems: "center",
                               border: `1px solid ${themePalette.divider}`,
-                              borderRadius: '6px',
+                              borderRadius: "6px",
                               px: 1.25,
                               py: 0.5,
                               bgcolor: themePalette.background.default,
@@ -1358,23 +1713,36 @@ export function OnboardingWorkspaceView({
                               sx={{
                                 width: 14,
                                 height: 14,
-                                borderRadius: '3px',
+                                borderRadius: "3px",
                                 bgcolor: hex,
                                 border: `1px solid ${themePalette.divider}`,
                               }}
                             />
-                            <Typography sx={{ fontFamily: FONT_MONO, fontSize: '0.75rem' }}>
+                            <Typography
+                              sx={{
+                                fontFamily: FONT_MONO,
+                                fontSize: "0.75rem",
+                              }}
+                            >
                               {hex}
                             </Typography>
                             {!isPortalLocked && (
                               <Button
                                 size="small"
                                 aria-label={`Remove color ${hex}`}
-                                sx={{ minWidth: 0, minHeight: 0, px: 0.5, py: 0, fontSize: '0.75rem' }}
+                                sx={{
+                                  minWidth: 0,
+                                  minHeight: 0,
+                                  px: 0.5,
+                                  py: 0,
+                                  fontSize: "0.75rem",
+                                }}
                                 onClick={() =>
                                   setBrandForm({
                                     ...brandForm,
-                                    brandColors: brandForm.brandColors.filter((_, idx) => idx !== i),
+                                    brandColors: brandForm.brandColors.filter(
+                                      (_, idx) => idx !== i,
+                                    ),
                                   })
                                 }
                               >
@@ -1385,17 +1753,28 @@ export function OnboardingWorkspaceView({
                         ))}
                       </Stack>
                       {!isPortalLocked && (
-                        <Stack direction="row" spacing={1.5} useFlexGap sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
+                        <Stack
+                          direction="row"
+                          spacing={1.5}
+                          useFlexGap
+                          sx={{ alignItems: "center", flexWrap: "wrap" }}
+                        >
                           <input
                             type="color"
-                            value={/^#[0-9a-fA-F]{6}$/.test(colorInput.trim()) ? colorInput.trim() : '#EDA320'}
-                            onChange={(e) => setColorInput(e.target.value.toUpperCase())}
+                            value={
+                              /^#[0-9a-fA-F]{6}$/.test(colorInput.trim())
+                                ? colorInput.trim()
+                                : "#EDA320"
+                            }
+                            onChange={(e) =>
+                              setColorInput(e.target.value.toUpperCase())
+                            }
                             style={{
                               width: 38,
                               height: 36,
                               border: `1px solid ${themePalette.divider}`,
                               borderRadius: 6,
-                              cursor: 'pointer',
+                              cursor: "pointer",
                             }}
                           />
                           <TextField
@@ -1410,12 +1789,14 @@ export function OnboardingWorkspaceView({
                             size="small"
                             onClick={() => {
                               const trimmed = colorInput.trim();
-                              const normalized = trimmed.startsWith('#') ? trimmed : `#${trimmed}`;
+                              const normalized = trimmed.startsWith("#")
+                                ? trimmed
+                                : `#${trimmed}`;
                               if (!/^#[0-9a-fA-F]{3,8}$/.test(normalized)) {
                                 dispatch(
                                   showToast({
-                                    severity: 'warning',
-                                    text: 'Enter a valid hex color code (e.g. #EDA320).',
+                                    severity: "warning",
+                                    text: "Enter a valid hex color code (e.g. #EDA320).",
                                   }),
                                 );
                                 return;
@@ -1424,8 +1805,8 @@ export function OnboardingWorkspaceView({
                               if (brandForm.brandColors.length >= 12) {
                                 dispatch(
                                   showToast({
-                                    severity: 'warning',
-                                    text: 'Maximum of 12 brand colors allowed.',
+                                    severity: "warning",
+                                    text: "Maximum of 12 brand colors allowed.",
                                   }),
                                 );
                                 return;
@@ -1433,7 +1814,10 @@ export function OnboardingWorkspaceView({
                               if (!brandForm.brandColors.includes(canonical)) {
                                 setBrandForm({
                                   ...brandForm,
-                                  brandColors: [...brandForm.brandColors, canonical],
+                                  brandColors: [
+                                    ...brandForm.brandColors,
+                                    canonical,
+                                  ],
                                 });
                               }
                               setColorInput(canonical);
@@ -1453,7 +1837,10 @@ export function OnboardingWorkspaceView({
                       fullWidth
                       value={brandForm.typographyNotes}
                       onChange={(e) =>
-                        setBrandForm({ ...brandForm, typographyNotes: e.target.value })
+                        setBrandForm({
+                          ...brandForm,
+                          typographyNotes: e.target.value,
+                        })
                       }
                       placeholder="Specify primary display font, body font, and licensing notes"
                     />
@@ -1464,7 +1851,10 @@ export function OnboardingWorkspaceView({
                       fullWidth
                       value={brandForm.designReferences}
                       onChange={(e) =>
-                        setBrandForm({ ...brandForm, designReferences: e.target.value })
+                        setBrandForm({
+                          ...brandForm,
+                          designReferences: e.target.value,
+                        })
                       }
                     />
                     <TextField
@@ -1474,14 +1864,17 @@ export function OnboardingWorkspaceView({
                       fullWidth
                       value={brandForm.brandVoiceNotes}
                       onChange={(e) =>
-                        setBrandForm({ ...brandForm, brandVoiceNotes: e.target.value })
+                        setBrandForm({
+                          ...brandForm,
+                          brandVoiceNotes: e.target.value,
+                        })
                       }
                     />
                   </Stack>
                 )}
 
                 {/* SECTION 3: WEBSITE CONTENT */}
-                {activeSectionKey === 'website_content' && (
+                {activeSectionKey === "website_content" && (
                   <Stack spacing={2.5}>
                     <TextField
                       label="Homepage Headline & Key Messaging"
@@ -1491,7 +1884,10 @@ export function OnboardingWorkspaceView({
                       fullWidth
                       value={contentForm.homepageCopy}
                       onChange={(e) =>
-                        setContentForm({ ...contentForm, homepageCopy: e.target.value })
+                        setContentForm({
+                          ...contentForm,
+                          homepageCopy: e.target.value,
+                        })
                       }
                     />
                     <TextField
@@ -1502,7 +1898,10 @@ export function OnboardingWorkspaceView({
                       fullWidth
                       value={contentForm.aboutCopy}
                       onChange={(e) =>
-                        setContentForm({ ...contentForm, aboutCopy: e.target.value })
+                        setContentForm({
+                          ...contentForm,
+                          aboutCopy: e.target.value,
+                        })
                       }
                     />
                     <TextField
@@ -1513,7 +1912,10 @@ export function OnboardingWorkspaceView({
                       fullWidth
                       value={contentForm.servicesCopy}
                       onChange={(e) =>
-                        setContentForm({ ...contentForm, servicesCopy: e.target.value })
+                        setContentForm({
+                          ...contentForm,
+                          servicesCopy: e.target.value,
+                        })
                       }
                     />
                     <TextField
@@ -1523,7 +1925,10 @@ export function OnboardingWorkspaceView({
                       fullWidth
                       value={contentForm.contactPageCopy}
                       onChange={(e) =>
-                        setContentForm({ ...contentForm, contactPageCopy: e.target.value })
+                        setContentForm({
+                          ...contentForm,
+                          contactPageCopy: e.target.value,
+                        })
                       }
                     />
                     <TextField
@@ -1531,7 +1936,10 @@ export function OnboardingWorkspaceView({
                       fullWidth
                       value={contentForm.existingWebsiteRefs}
                       onChange={(e) =>
-                        setContentForm({ ...contentForm, existingWebsiteRefs: e.target.value })
+                        setContentForm({
+                          ...contentForm,
+                          existingWebsiteRefs: e.target.value,
+                        })
                       }
                     />
                     <Divider />
@@ -1539,12 +1947,19 @@ export function OnboardingWorkspaceView({
                       clientId={workspace.client.id}
                       category="website_media"
                       disabled={isPortalLocked}
-                      label={`Upload Website Photos, Hero Images, or Videos${websiteAssets.length > 0 ? ` (${websiteAssets.length} uploaded)` : ''}`}
+                      label={`Upload Website Photos, Hero Images, or Videos${websiteAssets.length > 0 ? ` (${websiteAssets.length} uploaded)` : ""}`}
                       onUploaded={() => {
                         refetch();
-                        dispatch(showToast({ severity: 'success', text: 'Website media uploaded' }));
+                        dispatch(
+                          showToast({
+                            severity: "success",
+                            text: "Website media uploaded",
+                          }),
+                        );
                       }}
-                      onError={(msg) => dispatch(showToast({ severity: 'error', text: msg }))}
+                      onError={(msg) =>
+                        dispatch(showToast({ severity: "error", text: msg }))
+                      }
                     />
                     <SectionAssetsList
                       assets={websiteAssets}
@@ -1555,7 +1970,7 @@ export function OnboardingWorkspaceView({
                 )}
 
                 {/* SECTION 4: PROJECT REQUIREMENTS */}
-                {activeSectionKey === 'project_requirements' && (
+                {activeSectionKey === "project_requirements" && (
                   <Stack spacing={2.5}>
                     <TextField
                       label="Primary Project Goals"
@@ -1564,7 +1979,9 @@ export function OnboardingWorkspaceView({
                       rows={3}
                       fullWidth
                       value={reqForm.projectGoals}
-                      onChange={(e) => setReqForm({ ...reqForm, projectGoals: e.target.value })}
+                      onChange={(e) =>
+                        setReqForm({ ...reqForm, projectGoals: e.target.value })
+                      }
                     />
                     <TextField
                       label="Required Features & Deliverables"
@@ -1573,7 +1990,12 @@ export function OnboardingWorkspaceView({
                       rows={3}
                       fullWidth
                       value={reqForm.requiredFeatures}
-                      onChange={(e) => setReqForm({ ...reqForm, requiredFeatures: e.target.value })}
+                      onChange={(e) =>
+                        setReqForm({
+                          ...reqForm,
+                          requiredFeatures: e.target.value,
+                        })
+                      }
                     />
                     <TextField
                       label="Functional & Integration Requirements"
@@ -1582,7 +2004,10 @@ export function OnboardingWorkspaceView({
                       fullWidth
                       value={reqForm.functionalRequirements}
                       onChange={(e) =>
-                        setReqForm({ ...reqForm, functionalRequirements: e.target.value })
+                        setReqForm({
+                          ...reqForm,
+                          functionalRequirements: e.target.value,
+                        })
                       }
                     />
                     <TextField
@@ -1592,7 +2017,10 @@ export function OnboardingWorkspaceView({
                       fullWidth
                       value={reqForm.designPreferences}
                       onChange={(e) =>
-                        setReqForm({ ...reqForm, designPreferences: e.target.value })
+                        setReqForm({
+                          ...reqForm,
+                          designPreferences: e.target.value,
+                        })
                       }
                     />
                     <Grid container spacing={2}>
@@ -1602,7 +2030,10 @@ export function OnboardingWorkspaceView({
                           fullWidth
                           value={reqForm.referenceWebsites}
                           onChange={(e) =>
-                            setReqForm({ ...reqForm, referenceWebsites: e.target.value })
+                            setReqForm({
+                              ...reqForm,
+                              referenceWebsites: e.target.value,
+                            })
                           }
                         />
                       </Grid>
@@ -1615,7 +2046,10 @@ export function OnboardingWorkspaceView({
                           slotProps={{ inputLabel: { shrink: true } }}
                           value={reqForm.targetDeadline}
                           onChange={(e) =>
-                            setReqForm({ ...reqForm, targetDeadline: e.target.value })
+                            setReqForm({
+                              ...reqForm,
+                              targetDeadline: e.target.value,
+                            })
                           }
                         />
                       </Grid>
@@ -1627,14 +2061,17 @@ export function OnboardingWorkspaceView({
                       fullWidth
                       value={reqForm.additionalInstructions}
                       onChange={(e) =>
-                        setReqForm({ ...reqForm, additionalInstructions: e.target.value })
+                        setReqForm({
+                          ...reqForm,
+                          additionalInstructions: e.target.value,
+                        })
                       }
                     />
                   </Stack>
                 )}
 
                 {/* SECTION 5: ACCESS & CREDENTIALS */}
-                {activeSectionKey === 'access_credentials' && (
+                {activeSectionKey === "access_credentials" && (
                   <Stack spacing={3}>
                     <Grid container spacing={2}>
                       <Grid size={{ xs: 12, sm: 5 }}>
@@ -1650,9 +2087,15 @@ export function OnboardingWorkspaceView({
                             })
                           }
                         >
-                          <MenuItem value="delegated_invite">Delegated Collaborator Invite</MenuItem>
-                          <MenuItem value="temporary_token">Temporary / Scoped Token</MenuItem>
-                          <MenuItem value="encrypted_vault">Encrypted Credential Vault</MenuItem>
+                          <MenuItem value="delegated_invite">
+                            Delegated Collaborator Invite
+                          </MenuItem>
+                          <MenuItem value="temporary_token">
+                            Temporary / Scoped Token
+                          </MenuItem>
+                          <MenuItem value="encrypted_vault">
+                            Encrypted Credential Vault
+                          </MenuItem>
                         </TextField>
                       </Grid>
                       <Grid size={{ xs: 12, sm: 7 }}>
@@ -1698,18 +2141,25 @@ export function OnboardingWorkspaceView({
                 )}
 
                 {/* SECTION 6: ADDITIONAL DOCUMENTS */}
-                {activeSectionKey === 'additional_documents' && (
+                {activeSectionKey === "additional_documents" && (
                   <Stack spacing={2.5}>
                     <FileUploader
                       clientId={workspace.client.id}
                       category="additional_document"
                       disabled={isPortalLocked}
-                      label={`Upload Contracts, Sitemaps, PDFs, or Word Documents${additionalDocAssets.length > 0 ? ` (${additionalDocAssets.length} uploaded)` : ''}`}
+                      label={`Upload Contracts, Sitemaps, PDFs, or Word Documents${additionalDocAssets.length > 0 ? ` (${additionalDocAssets.length} uploaded)` : ""}`}
                       onUploaded={() => {
                         refetch();
-                        dispatch(showToast({ severity: 'success', text: 'Document uploaded' }));
+                        dispatch(
+                          showToast({
+                            severity: "success",
+                            text: "Document uploaded",
+                          }),
+                        );
                       }}
-                      onError={(msg) => dispatch(showToast({ severity: 'error', text: msg }))}
+                      onError={(msg) =>
+                        dispatch(showToast({ severity: "error", text: msg }))
+                      }
                     />
 
                     <SectionAssetsList
@@ -1725,7 +2175,10 @@ export function OnboardingWorkspaceView({
                       fullWidth
                       value={docsMetaForm.documentNotes}
                       onChange={(e) =>
-                        setDocsMetaForm({ ...docsMetaForm, documentNotes: e.target.value })
+                        setDocsMetaForm({
+                          ...docsMetaForm,
+                          documentNotes: e.target.value,
+                        })
                       }
                     />
 
@@ -1749,14 +2202,18 @@ export function OnboardingWorkspaceView({
                 {/* Section Action Footer */}
                 <Divider sx={{ my: 3 }} />
                 <Stack
-                  direction={{ xs: 'column', sm: 'row' }}
+                  direction={{ xs: "column", sm: "row" }}
                   spacing={2}
                   sx={{
-                    justifyContent: 'space-between',
-                    alignItems: { xs: 'stretch', sm: 'center' },
+                    justifyContent: "space-between",
+                    alignItems: { xs: "stretch", sm: "center" },
                   }}
                 >
-                  <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    sx={{ alignItems: "center" }}
+                  >
                     {prevSection && (
                       <Button
                         size="small"
@@ -1777,10 +2234,13 @@ export function OnboardingWorkspaceView({
                         Next
                       </Button>
                     )}
-                    <Typography variant="caption" sx={{ display: { xs: 'none', lg: 'inline' }, ml: 1 }}>
+                    <Typography
+                      variant="caption"
+                      sx={{ display: { xs: "none", lg: "inline" }, ml: 1 }}
+                    >
                       {activeSection.updatedAt
                         ? `Updated ${formatShortDate(activeSection.updatedAt)}`
-                        : 'Not saved yet'}
+                        : "Not saved yet"}
                     </Typography>
                   </Stack>
 
@@ -1788,7 +2248,7 @@ export function OnboardingWorkspaceView({
                     direction="row"
                     spacing={1.5}
                     useFlexGap
-                    sx={{ justifyContent: 'flex-end', flexWrap: 'wrap' }}
+                    sx={{ justifyContent: "flex-end", flexWrap: "wrap" }}
                   >
                     {!isPortalLocked && (
                       <>
@@ -1808,10 +2268,10 @@ export function OnboardingWorkspaceView({
                           onClick={() => handleSave(true)}
                         >
                           {saving
-                            ? 'Submitting...'
-                            : activeSection.status === 'completed'
-                              ? 'Update Submission'
-                              : 'Submit Section'}
+                            ? "Submitting..."
+                            : activeSection.status === "completed"
+                              ? "Update Submission"
+                              : "Submit Section"}
                         </Button>
                       </>
                     )}
@@ -1824,15 +2284,22 @@ export function OnboardingWorkspaceView({
                     sx={{
                       mt: 3,
                       p: 2.5,
-                      borderRadius: '8px',
+                      borderRadius: "8px",
                       bgcolor: themePalette.background.default,
                       border: `1px solid ${themePalette.divider}`,
                     }}
                   >
-                    <Typography variant="subtitle2" sx={{ color: themePalette.text.primary, mb: 1 }}>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ color: themePalette.text.primary, mb: 1 }}
+                    >
                       Agency Review & Sign-Off
                     </Typography>
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ alignItems: 'stretch' }}>
+                    <Stack
+                      direction={"column"}
+                      spacing={1.5}
+                      sx={{ alignItems: "stretch" }}
+                    >
                       <TextField
                         placeholder="Optional review note or requested changes..."
                         fullWidth
@@ -1844,8 +2311,8 @@ export function OnboardingWorkspaceView({
                         color="warning"
                         disabled={reviewing}
                         startIcon={<RotateCcw size={15} />}
-                        onClick={() => handleReview('needs_revision')}
-                        sx={{ whiteSpace: 'nowrap' }}
+                        onClick={() => handleReview("needs_revision")}
+                        sx={{ whiteSpace: "nowrap" }}
                       >
                         Request Changes
                       </Button>
@@ -1854,8 +2321,8 @@ export function OnboardingWorkspaceView({
                         color="secondary"
                         disabled={reviewing}
                         startIcon={<CheckCircle2 size={15} />}
-                        onClick={() => handleReview('completed')}
-                        sx={{ whiteSpace: 'nowrap' }}
+                        onClick={() => handleReview("completed")}
+                        sx={{ whiteSpace: "nowrap" }}
                       >
                         Approve Section
                       </Button>

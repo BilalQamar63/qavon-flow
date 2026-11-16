@@ -94,12 +94,12 @@ export async function uploadBufferToCloudinary(
         },
       },
       (error, result) => {
-        if (error || !result) {
-          reject(
-            error instanceof Error
-              ? error
-              : new Error('Cloudinary upload failed without a valid result payload'),
-          );
+        if (error) {
+          reject(error);
+          return;
+        }
+        if (!result) {
+          reject(new Error('Cloudinary upload failed without a valid result payload'));
           return;
         }
 

@@ -327,10 +327,25 @@ async function handleAssetUpload(req: AuthenticatedRequest, res: Response): Prom
       res.status(503).json({ error: err.message });
       return;
     }
+    const cloudinaryHttpCode =
+      typeof err === 'object' && err !== null && 'http_code' in err &&
+      typeof err.http_code === 'number'
+        ? err.http_code
+        : undefined;
+    const errorName =
+      err instanceof Error
+        ? err.name
+        : typeof err === 'object' &&
+            err !== null &&
+            'name' in err &&
+            typeof err.name === 'string'
+          ? err.name
+          : 'UnknownError';
     recordSecurityLog('cloudinary_upload_failed', {
       agencyId: session.agencyId,
       clientId,
-      errorName: err instanceof Error ? err.name : 'UnknownError',
+      errorName,
+      cloudinaryHttpCode,
     });
     res.status(502).json({ error: 'Cloud file storage upload failed. Please retry.' });
     return;

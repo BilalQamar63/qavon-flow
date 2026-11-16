@@ -357,6 +357,33 @@ describe('Cloudinary Configuration, Folder Mapping & Orchestration Safety', () =
     expect(res.publicId).toContain('client-onboarding/ag-1/cl-1/documents/msa-contract-');
   });
 
+  it('preserves Cloudinary upload error details for server diagnostics', async () => {
+    setMockCloudinaryEnv();
+    vi.spyOn(cloudinary.uploader, 'upload_stream').mockImplementation(((
+      _options: Record<string, unknown>,
+      cb?: (err: unknown, res?: Record<string, unknown>) => void,
+    ) => ({
+      end() {
+        cb?.({ name: 'Unauthorized', message: 'Invalid API credentials', http_code: 401 });
+      },
+    })) as never);
+
+    await expect(
+      uploadBufferToCloudinary({
+        buffer: Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+        originalName: 'logo.png',
+        mimeType: 'image/png',
+        agencyId: 'ag-1',
+        clientId: 'cl-1',
+        category: 'primary_logo',
+      }),
+    ).rejects.toMatchObject({
+      name: 'Unauthorized',
+      message: 'Invalid API credentials',
+      http_code: 401,
+    });
+  });
+
   it('safely upgrades a legacy SQLite assets table missing Cloudinary columns', async () => {
     const rawSqlite = new DatabaseSync(':memory:');
     rawSqlite.exec(`

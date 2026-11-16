@@ -50,7 +50,7 @@ import {
   useGetClientsQuery,
 } from '../../store/api/hubApi';
 import { useAppDispatch } from '../../store/hooks';
-import { openClientWorkspace, showToast } from '../../store/slices/uiSlice';
+import { openClientWorkspace, setActivePage, showToast } from '../../store/slices/uiSlice';
 import { FONT_DISPLAY, themePalette } from '../../theme';
 import type { AssetCategory, AssetRecord } from '../../types';
 import { useDebouncedValue } from '../../hooks/useDebouncedValue';
@@ -185,6 +185,22 @@ export function AssetsPage() {
 
   const hasFilters = Boolean(search || clientIdFilter || categoryFilter);
 
+  const handleStartUpload = () => {
+    if (clients.length === 0) {
+      dispatch(setActivePage('clients'));
+      dispatch(
+        showToast({
+          severity: 'info',
+          text: 'Create a client workspace before uploading an asset.',
+        }),
+      );
+      return;
+    }
+
+    setUploadClientId(clientIdFilter || clients[0].id);
+    setUploadModalOpen(true);
+  };
+
   const handleDownload = async (asset: AssetRecord) => {
     try {
       const { url } = await getDownloadUrl({ id: asset.id }).unwrap();
@@ -215,11 +231,7 @@ export function AssetsPage() {
             variant="contained"
             color="primary"
             startIcon={<Plus size={16} />}
-            disabled={clients.length === 0}
-            onClick={() => {
-              setUploadClientId(clientIdFilter || clients[0]?.id || '');
-              setUploadModalOpen(true);
-            }}
+            onClick={handleStartUpload}
           >
             Upload Asset
           </Button>
@@ -404,17 +416,20 @@ export function AssetsPage() {
           description={
             hasFilters
               ? 'No uploaded assets match your current filters.'
-              : 'Upload logos, guidelines, media, or documents from a client onboarding workspace or using the Upload Asset button.'
+              : clients.length === 0
+                ? 'Create a client workspace before uploading assets. Each asset must be associated with a client.'
+                : 'Upload logos, guidelines, media, or documents from a client onboarding workspace or using the Upload Asset button.'
           }
-          actionLabel={hasFilters ? 'Clear Filters' : 'Upload Asset'}
+          actionLabel={
+            hasFilters ? 'Clear Filters' : clients.length === 0 ? 'Create Client' : 'Upload Asset'
+          }
           onAction={() => {
             if (hasFilters) {
               setSearch('');
               setClientIdFilter('');
               setCategoryFilter('');
-            } else if (clients.length > 0) {
-              setUploadClientId(clients[0].id);
-              setUploadModalOpen(true);
+            } else {
+              handleStartUpload();
             }
           }}
           icon={<FolderOpen size={20} />}

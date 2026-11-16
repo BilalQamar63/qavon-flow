@@ -232,7 +232,7 @@ export const serverConfig = {
       return process.env.SMTP_PASS?.trim() || '';
     },
     get from(): string {
-      return process.env.EMAIL_FROM?.trim() || 'onboarding@localhost';
+      return process.env.EMAIL_FROM?.trim() || '';
     },
   },
 };
